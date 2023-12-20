@@ -1,0 +1,138 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3
+					],
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"build" : "src/graph",
+					"jsonFile" : "directory-src.graph-Debug-845f2d5f5f97891e5399.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/graph",
+					"targetIndexes" : 
+					[
+						1
+					]
+				},
+				{
+					"build" : "src/queue",
+					"jsonFile" : "directory-src.queue-Debug-8a1464eeaf12dab0638d.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/queue",
+					"targetIndexes" : 
+					[
+						2
+					]
+				},
+				{
+					"build" : "src/utils",
+					"jsonFile" : "directory-src.utils-Debug-63aae164cb9969211904.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "src/utils",
+					"targetIndexes" : 
+					[
+						3
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					],
+					"name" : "CampusNavigation",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "CampusNavigation::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-CampusNavigation-Debug-c79567c77bed5188a61c.json",
+					"name" : "CampusNavigation",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "graphFunctions::@ac88e395dda6631a5a41",
+					"jsonFile" : "target-graphFunctions-Debug-6e58a2072b7c7d9a134e.json",
+					"name" : "graphFunctions",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "queueFunctions::@5144d3adcc02e50a95b1",
+					"jsonFile" : "target-queueFunctions-Debug-599ea3bc237169eaf577.json",
+					"name" : "queueFunctions",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "utilsFunctions::@f1b38b22aeb65474a6c5",
+					"jsonFile" : "target-utilsFunctions-Debug-2cde5805139c63023c01.json",
+					"name" : "utilsFunctions",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug",
+		"source" : "C:/Users/YZK/Documents/Clion/Project/CampusNavigation"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

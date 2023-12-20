@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Graph Visualization</title>
+    <script src="./vue.js" id="vue"></script>
+</head>
+<body>
+    <!--稍微控制了刷新频率-->
+    <div id="app" v-on:mouseleave="refresh()">
+    <div class="background">
+        <div class="graph" v-html="svg"></div>
+    </div>
+    </div>
+
+    <script src="./viz-standalone.js" id="viz"></script>  
+    <script src="./navigation.js" id="nav"></script>
+    <script>
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                svg: '',
+                screenWidth: document.body.clientWidth,
+                screenHeight: document.body.clientHeight,
+            },
+            watch:{
+                screenWidth(val){
+                    if(!this.timer){
+                        this.screenWidth = val
+                        this.timer = true
+                        let outside = this
+                        setTimeout(function(){
+                            outside.timer = false
+                        },400)
+                    }
+                },
+                screenHeight(val){
+                    if(!this.timer){
+                        this.screenHeight = val
+                        this.timer = true
+                        let outside = this
+                        setTimeout(function(){
+                            outside.timer = false
+                        },400)
+                    }
+                }
+            },
+            methods: {
+                refresh(){
+                    document.location.reload();
+                }
+            },
+            mounted() {
+                var outside = this;
+                window.onresize = () => {
+                    return (() => {
+                        window.screenWidth = document.body.clientWidth;
+                        outside.screenWidth = window.screenWidth;
+                        window.screenHeight = document.body.clientHeight;
+                        outside.screenHeight = window.screenHeight;
+                    })()
+                }
+
+                Viz.instance().then((viz) => {
+                    const svg = viz.renderSVGElement(getNav());
+                    // console.log(svg.outerHTML);
+                    this.svg = svg.outerHTML;
+                });
+            },
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/CMakeFiles/CampusNavigation.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/src/graph/CMakeFiles/graphFunctions.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/src/graph/CMakeFiles/edit_cache.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/src/graph/CMakeFiles/rebuild_cache.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/src/queue/CMakeFiles/queueFunctions.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/src/queue/CMakeFiles/edit_cache.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/src/queue/CMakeFiles/rebuild_cache.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/src/utils/CMakeFiles/utilsFunctions.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/src/utils/CMakeFiles/edit_cache.dir
+C:/Users/YZK/Documents/Clion/Project/CampusNavigation/cmake-build-debug/src/utils/CMakeFiles/rebuild_cache.dir

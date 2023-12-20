@@ -1,0 +1,23 @@
+# ninja log v5
+7	157	7245922370631935	CMakeFiles/CampusNavigation.dir/src/adjGraph.c.obj	6a82902f4fd3fc9c
+5	801	7247110825872422	CMakeFiles/CampusNavigation.dir/src/setCursorVisible.c.obj	7605cf103157df16
+3	782	7247698554596442	CMakeFiles/CampusNavigation.dir/main.c.obj	13c710870d701d00
+6	831	7247016476035338	CMakeFiles/CampusNavigation.dir/src/gotoxy.c.obj	239318dd54a345a2
+6	1148	7247041174008133	CMakeFiles/CampusNavigation.dir/src/HideCursor.c.obj	c1fd036531499d0a
+782	886	7247698555609239	CampusNavigation.exe	75f6b6fb73694469
+0	79	7247724164188962	build.ninja	b67ebf1f3f6b12d8
+5	157	7245922370631935	CMakeFiles/CampusNavigation.dir/src/queue.c.obj	62719d180f7dd245
+21	184	7247005761731324	CMakeFiles/CampusNavigation.dir/src/formatParser.c.obj	8fa06b7bd559662c
+10	84	7247679038194991	src/graph/CMakeFiles/graphFunctions.dir/adjGraph.c.obj	715aa2beab2cb86f
+12	76	7247678794795940	src/queue/CMakeFiles/queueFunctions.dir/queue.c.obj	c128a35b646d9e0d
+9	1210	7247552106167482	src/utils/CMakeFiles/utilsFunctions.dir/gotoxy.c.obj	7e20fbabe17c6de3
+11	1230	7247552106379554	src/utils/CMakeFiles/utilsFunctions.dir/setCursorVisible.c.obj	c4f2b140d1919510
+18	855	7247694751222110	CMakeFiles/CampusNavigation.dir/src/operate.c.obj	82fbcd89b2cad255
+77	135	7247678795377868	src/queue/libqueueFunctions.a	9730acfc1f5fa706
+84	146	7247679038805444	src/graph/libgraphFunctions.a	e18e5c0615b314d3
+8	119	7247552095256271	src/utils/CMakeFiles/utilsFunctions.dir/formatParser.c.obj	a59bca596af6c22a
+74	148	7247677064274048	src/utils/libutilsFunctions.a	e16c9b3db71c02af
+11	73	7247677063526538	src/utils/CMakeFiles/utilsFunctions.dir/printFileHead.c.obj	6906759425eff81
+15	849	7247694751161178	CMakeFiles/CampusNavigation.dir/src/service.c.obj	c950ccf6f4136060
+3	842	7247730857760359	CMakeFiles/CampusNavigation.dir/main.c.obj	13c710870d701d00
+843	958	7247730858887571	CampusNavigation.exe	b9aece5d9f396422
