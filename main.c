@@ -18,13 +18,9 @@ bool ReadGraphFile(Graph *graph);
 bool ToFile(Graph *graph);
 bool CreateBat();
 //小工具
-int parseInt(char *str);
-double parseDouble(char *str);
 bool isConnected(Graph *g, char *origin, char *destination);
 int getSn(Graph *g, char *name);
-char toLowerDir(char ch);
 bool PrintPageHead();
-void setCursorVisible(bool isVisible);
 /*情景问题解决函数*/
 //信息相关
 void menu(Graph *g);
@@ -51,7 +47,7 @@ bool isReachable(Graph *g, char *origin, char *end);
 Link *emptySpot;
 //一一对应序列
 int basisSn[MaxNum];
-//nodejs是否打开
+//自行记住nodejs是否打开
 bool isNodeAlive = false;
 typedef struct {
 	bool Save_Temp_After_Quit;
@@ -87,41 +83,41 @@ void menu(Graph *g){
 	printf("\t5.应用设置\t");
 	printf("\t6.退出程序\n\n");
 	printf("\t\t请输入操作代码：");
-	scanf_s("%d", &code);
+	scanf_s("%c", &code);
 	getchar();//消耗多余换行符号
 
 	switch (code) {
-		case 1:
+		case '1':
 			//用户自选操作，返回主菜单
 			while(!SelectMap(g));
 			printf("\n操作结束，准备回到主页.");
 			Sleep(2000);
 			break;
-		case 2:
+		case '2':
 			//选建筑，返回主菜单
 			while(!SelectBuilding(g));
 			printf("\n操作结束，准备回到主页.");
 			Sleep(2000);
 			break;
-		case 3:
+		case '3':
 			//可达性校验，返回主菜单
 			while(!ReachableTest(g));
 			printf("\n操作结束，准备回到主页.");
 			Sleep(2000);
 			break;
-		case 4:
+		case '4':
 			//导航，返回主菜单
 			while(!Navigate(g));
 			printf("\n路线规划结束~按任意键回到主菜单.\n");
 			system("pause");
 			break;
-		case 5:
+		case '5':
 			//设置程序，返回主菜单
 			ProgramSetting();
 			printf("\n应用设置结束.");
 			Sleep(2000);
 			break;
-		case 6:
+		case '6':
 		case 'n':
 		case 'N':
 			//退出程序
@@ -159,11 +155,11 @@ bool SelectMap(Graph *g){
 	memset(startPicCmd, 0, sizeof(startPicCmd));
 	strcat(startPicCmd, "start ");
 	//2.读取用户信息
-	scanf_s("%d",&code);
+	scanf_s("%c",&code);
 	getchar();
 	//3.分析用户信息，分流
 	switch (code) {
-		case 1:	//查看地图
+		case '1':	//查看地图
 			//新生成文件，根据设置确定打开方式
 			ToFile(g);
 			if(settings.Web_Mode){
@@ -186,17 +182,17 @@ bool SelectMap(Graph *g){
 			printf("\n\t图片已打开~按任意键返回..\n");
 			system("pause");
 			return false;
-		case 2:	//增加建筑
+		case '2':	//增加建筑
 			while(!AddBuildingInfo(g));
 			printf("\n操作结束，准备返回上一级页面..");
 			Sleep(2000);
 			return false;
-		case 3:	//统计
+		case '3':	//统计
 			MakeStatistic(g);
 			printf("\n统计结束~按任意键回到上一级页面..\n");
 			system("pause");
 			return false;
-		case 4:
+		case '4':
 		case 'n':
 		case 'N':
 			break;
@@ -211,7 +207,7 @@ bool AddBuildingInfo(Graph *g){
 	//0.清屏，输出页面头
 	system("cls");
 	PrintPageHead();
-	printf("增加校园建筑...\n");
+	printf("增加校园建筑...（输入“n”返回上一级菜单）\n");
 	//1.定义相关参数并初始化，预计最多占27格
 	char input[30];
 	memset(input, 0, sizeof (input));
@@ -219,7 +215,7 @@ bool AddBuildingInfo(Graph *g){
 	memset(name, 0, sizeof (name));
 	double x, y;
 	//1.读取用户输入
-	printf("\n请输入新建筑信息：（建筑名最多为8个中文字符；坐标均为正数，仅支持一位小数；符号均为英文符号）\n格式：【新建筑名:x坐标,y坐标】，缺省的元素无需输入冗余的符号\n");
+	printf("\n请输入新建筑信息：（建筑名最多为8个中文字符且不可含数字符号；坐标均为正数，仅支持一位小数；符号均为英文符号）\n格式：【新建筑名:x坐标,y坐标】，缺省的元素无需输入冗余的符号\n");
 	scanf_s("%s", input);
 	getchar();
 	//2.分析用户输入
@@ -232,12 +228,16 @@ bool AddBuildingInfo(Graph *g){
 	bool located = false;
 	//2.2非法性校验：非空校验，重复性校验在下一个函数中
 	if(str1 == NULL){
-		printf("错误：无效的输入！(243)");
+		printf("\n错误：数据输入失效！(231)\n");
+		Sleep(1000);
+		return false;
+	}else if(strlen(str1) > NameSize){
+		printf("\n错误：建筑名称过长！(235)\n");
 		Sleep(1000);
 		return false;
 	}
 	//2.3解析用户输入
-	if(str2 == NULL && !(str1[0] >= '0' && str1[0] <= '9')){		//情况1：给定建筑名，不指定坐标
+	if(str2 == NULL){		//情况1：给定建筑名，不指定坐标
 		strcpy(name, str1);
 	}else if(str2 != NULL){		//情况2：给定建筑名，给定坐标
 		strcpy(name, str1);
@@ -246,9 +246,11 @@ bool AddBuildingInfo(Graph *g){
 		located = true;
 	}
 	//3.参数递交及页面跳转
-	AddBuilding(g, name, located, x, y);
-	printf("\n建筑添加成功！\n");
-	Sleep(1500);
+	if(AddBuilding(g, name, located, x, y)){
+		printf("\n建筑添加成功！\n");
+		Sleep(1500);
+		ToFile(g);
+	}
 	return false;
 }
 bool ReachableTest(Graph *g){
@@ -257,12 +259,9 @@ bool ReachableTest(Graph *g){
 	PrintPageHead();
 	printf("可达性校验..\n");
 	//1.读取用户信息
-	char origin[NameSize];
-	char destination[NameSize];
-	//1.1初始化数组
-	memset(origin,0,sizeof (origin));
-	memset(destination,0,sizeof (destination));
-	//1.2读取信息	//1.3返回上一级
+	char *origin;
+	char *dest;
+	//1.1读取信息	//1.2返回上一级
 	printf("请输入起始地：");
 	scanf_s("%s", origin);
 	getchar();
@@ -270,22 +269,38 @@ bool ReachableTest(Graph *g){
 		return true;
 	}
 	printf("请输入目的地：");
-	scanf_s("%s", destination);
+	scanf_s("%s", dest);
 	getchar();
 	if(origin[0] == 'n' || origin[0] == 'N'){
 		return true;
 	}
 	//1.4非法性校验
-
-
+	if(origin == NULL || dest == NULL){
+		printf("\n错误：数据输入失效！(279)\n");
+		Sleep(1000);
+		return false;
+	}
+	if(strlen(origin) > NameSize || strlen(dest) > NameSize){
+		printf("\n错误：建筑名称有误！(284)\n");
+		Sleep(1000);
+		return false;
+	}
+	if(getSn(g,origin) == -1){
+		printf("\n错误：起始建筑/地点不存在！(289)\n");
+		Sleep(1000);
+		return false;
+	}else if(getSn(g,dest) == -1){
+		printf("\n错误：终点建筑/地点不存在！(293)\n");
+		Sleep(1000);
+		return false;
+	}
 	//2.判断可达		//3.反馈
-	if(isReachable(g,origin,destination)){
+	if(isReachable(g, origin, dest)){
 		printf("可达！");
 	}else{
 		printf("不可达！");
 	}
-
-
+	Sleep(2000);
 	return false;
 }
 bool InitProgram(Graph **graph, char *fileName) {
@@ -497,11 +512,15 @@ bool InitEdge(int adjMatrix[][MaxNum], AdjGraph *g, char *str, int *edgeNum) {
 }
 bool AddBuilding(Graph *g, char *name, bool isLocated, ...){
 	//0.建筑名校验
-	if(g->nodeNum > MaxNum){
-		printf("\n错误：地图空间不足，添加失败(515)\n");
+	int dup = 0;
+	//队空说明无再可用的SN，则无法添加新的结点
+	if(isEmpty(emptySpot)){
+		printf("\n错误：地图空间不足，添加失败！(518)\n");
+		Sleep(1000);
 		return false;
-	}else if(getSn(g, name) != -1){
-		printf("\n错误：已存在同名建筑/地点，添加失败(518)\n");
+	}else if( (dup = getSn(g, name)) != -1){
+		printf("\n错误：已存在同名建筑/地点，添加失败！(522)\n");
+		Sleep(1000);
 		return false;
 	}
 	//0.1坐标定义、赋值及校验
@@ -516,11 +535,13 @@ bool AddBuilding(Graph *g, char *name, bool isLocated, ...){
 		va_end(vaList);
 		//参数校验
 		if(x < 0 || y < 0){
-			printf("\n错误：坐标输入不规范，添加失败(533)\n");
+			printf("\n错误：坐标输入格式有误，添加失败！(538)\n");
+			Sleep(1000);
 			return false;
 		}
 		if(x > 14 || y > 15){
-			printf("\n错误：坐标超过校园范围，添加失败(537)\n");
+			printf("\n错误：坐标超过校园范围，添加失败！(543)\n");
+			Sleep(1000);
 			return false;
 		}
 	}
@@ -555,7 +576,7 @@ bool DelBuilding(Graph *g, char *name, bool isDelRoad){
 	int nodeSn = getSn(g, name);
 	//没找到，退出
 	if(nodeSn == -1){
-		printf("\n错误：建筑不存在(573)\n");
+		printf("\n错误：建筑不存在！(579)\n");
 		return false;
 	}
 	//2.清空相关信息
@@ -582,7 +603,7 @@ bool DelBuilding(Graph *g, char *name, bool isDelRoad){
 				if(!isConnected(g, g->nodes[concernSn[i]].data, g->nodes[concernSn[j]].data)){
 					//对于权：两条路径的权值相加
 					//对于ports，保留开口，开口为0的忽略
-					AddRoad(g, g->nodes[concernSn[i]].data, g->nodes[concernSn[j]].data, g->adjMatrix[nodeSn][concernSn[i]]+g->adjMatrix[nodeSn][concernSn[j]] ,true, g->adjGraph->ports[concernSn[i]][nodeSn], 0);
+					AddRoad(g, g->nodes[concernSn[i]].data, g->nodes[concernSn[j]].data, g->adjMatrix[nodeSn][concernSn[i]]+g->adjMatrix[nodeSn][concernSn[j]] ,true, g->adjGraph->ports[concernSn[i]][nodeSn], g->adjGraph->ports[concernSn[j]][nodeSn]);
 				}
 			}
 		}
@@ -666,14 +687,14 @@ bool UpdateAdjNodeInList(headNode *head, int aim, int weight){
 bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
 	//0.数据规范性校验1
 	if(strlen(name) > NameSize){
-		printf("\n错误：建筑名称过长\n");
+		printf("\n错误：建筑名称过长！(690)\n");
 		return false;
 	}
 	//2.更新建筑：改名/该位置即可
 	int nodeSn = getSn(g, name);
 	//2.1校验2
 	if(nodeSn == -1){
-		printf("\n错误：未找到建筑\n");
+		printf("\n错误：未找到目标建筑！(697)\n");
 		return false;
 	}
 	if(isRename || isRelocated){
@@ -692,7 +713,7 @@ bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
 		if(isRename){
 			newName = va_arg(vaList, char*);
 			if(strlen(newName) > NameSize){
-				printf("\n错误：建筑名称过长\n");
+				printf("\n错误：建筑名称过长！(716)\n");
 				return false;
 			}
 		}
@@ -702,10 +723,10 @@ bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
 			x = va_arg(vaList,double);
 			y = va_arg(vaList,double);
 			if(x > 14 || y > 15){
-				printf("\n错误：坐标超过校园范围，添加失败()\n");
+				printf("\n错误：坐标超过校园范围，添加失败！(726)\n");
 			}
 			if(x < 0 || y < 0){
-				printf("\n错误：坐标输入不规范，添加失败()\n");
+				printf("\n错误：坐标输入格式有误，添加失败！(729)\n");
 			}
 		}
 		if(isRename){
@@ -728,7 +749,7 @@ bool AddRoad(Graph *g, char *origin, char *end, int length, bool isSetPorts, ...
 	int sn1 = getSn(g,origin);
 	int sn2 = getSn(g,end);
 	if(sn1 == -1 && sn2 == -1){
-		printf("\n错误：数据输入错误！\n");
+		printf("\n错误：未找到指定建筑/地点！(752)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -761,7 +782,7 @@ bool DelRoad(Graph *g, char *origin, char *end){
 	int sn1 = getSn(g, origin);
 	int sn2 = getSn(g, end);
 	if(sn1 == -1 && sn2 == -1){
-		printf("\n错误：数据输入错误！\n");
+		printf("\n错误：未找到指定建筑/地点！(785)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -781,7 +802,7 @@ bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool isSetPort
 	int sn1 = getSn(g, origin);
 	int sn2 = getSn(g, end);
 	if(sn1 == -1 && sn2 == -1){
-		printf("\n错误：数据输入错误！\n");
+		printf("\n错误：未找到指定建筑/地点！(805)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -829,14 +850,11 @@ bool Navigate(Graph *g){
 	//0.清屏，输出文件头
 	system("cls");
 	PrintPageHead();
-	printf("导航路线规划..\n");
+	printf("导航路线规划..（输入“n”返回上一级菜单）\n");
 	PrintPageHead();
 	//1.读取用户信息
-	char origin[NameSize];
-	char destination[NameSize];
-	//1.0初始化数组
-	memset(origin,0,sizeof (origin));
-	memset(destination,0,sizeof (destination));
+	char *origin;
+	char *dest;
 	//1.1读取信息
 	again:
 	printf("请输入起始地：");
@@ -846,17 +864,30 @@ bool Navigate(Graph *g){
 		return true;
 	}
 	printf("请输入目的地：");
-	scanf_s("%s", destination);
+	scanf_s("%s", dest);
 	getchar();
 	if(origin[0] == 'n' || origin[0] == 'N'){
 		return true;
 	}
+	if(origin == NULL || dest == NULL){
+		printf("\n错误：数据输入失效！(873)\n");
+		Sleep(1000);
+		return false;
+	}
 	//1.2转成sn
 	int sn1 = getSn(g,origin);
-	int sn2 = getSn(g,destination);
+	int sn2 = getSn(g, dest);
 	//1.3非法校验
-
-
+	if(sn1 == -1 || sn2 == -1){
+		if(sn1 == -1){
+			printf("\n错误：建筑 %s 不存在！(883)\n", origin);
+		}
+		if(sn2 == -1){
+			printf("\n错误：建筑 %s 不存在！(886)\n", dest);
+		}
+		Sleep(1000);
+		return false;
+	}
 	//2.拿到最小路径（包括起点和终点）
 	int path[MaxNum];
 	int weight[MaxNum];
@@ -874,7 +905,7 @@ bool Navigate(Graph *g){
 		}
 	}
 	printf("\n全程距离: %d\n", totalWeight);
-	printf("以上是为您查询到的从 %s 到 %s 的最短路径及全程距离\n", origin, destination);
+	printf("以上是为您查询到的从 %s 到 %s 的最短路径及全程距离\n", origin, dest);
 	PrintPageHead();
 	goto again;
 
@@ -896,7 +927,7 @@ bool SelectBuilding(Graph *g){
 	//0.清屏，打印页面头
 	system("cls");
 	PrintPageHead();
-	printf("查询建筑信息..（输入n可返回上一级菜单）\n");
+	printf("查询建筑信息..（输入“n”返回上一级菜单）\n");
 	//1.读取用户信息
 	char origin[NameSize];
 	char destination[NameSize];
@@ -924,7 +955,11 @@ bool SelectBuilding(Graph *g){
 	printf("建筑/地点信息...\n");
 	printf("建筑名称：%s\n", origin);
 	printf("SN：%d\n", sn1);
-	printf("位置坐标：%.2lf,%.2lf\n",g->nodes[sn1].pos_x, g->nodes[sn1].pos_y);
+	if(g->nodes[sn1].pos_x == -1 || g->nodes[sn1].pos_y == -1){
+		printf("位置坐标：（未定）\n");
+	}else{
+		printf("位置坐标：%.2lf,%.2lf\n",g->nodes[sn1].pos_x, g->nodes[sn1].pos_y);
+	}
 	printf("与其他建筑道路连接情况：\n");
 	ArcNode *p = g->adjGraph->list[sn1].first;
 	//2.1遍历邻接链表
@@ -950,11 +985,13 @@ bool SelectBuilding(Graph *g){
 	switch (code) {
 		case '1':
 			UpdateBuildingInfo(g, origin);
+			ToFile(g);
 			printf("操作完成，正在返回上一级页面..");
 			Sleep(1500);
 			break;
 		case '2':
 			UpdateRoadInfo(g, origin);
+			ToFile(g);
 			printf("操作完成，正在返回上一级页面..");
 			Sleep(1500);
 			break;
@@ -971,6 +1008,7 @@ bool SelectBuilding(Graph *g){
 				printf("\n无效的操作码！\n");
 				Sleep(1000);
 			}
+			ToFile(g);
 			break;
 		case '4':
 		case 'n':
@@ -1007,7 +1045,11 @@ bool UpdateRoadInfo(Graph *g, char *origin){
 	char *str3 = strtok(NULL,"-");	//开口方向
 	//2.2非法性检验1
 	if(str1 == NULL){
-		printf("\n错误：数据输入错误\n");
+		printf("\n错误：数据输入失效！(1048)\n");
+		Sleep(1000);
+		return false;
+	} else if(strlen(str1) > NameSize){
+		printf("\n错误：建筑名称过长！(1052)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -1031,7 +1073,7 @@ bool UpdateRoadInfo(Graph *g, char *origin){
 	}
 	//2.4非法性校验
 	if(getSn(g, str1) == -1){
-		printf("\n错误：输入的目标建筑不存在！\n");
+		printf("\n错误：输入的目标建筑不存在！(1076)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -1064,7 +1106,7 @@ bool UpdateBuildingInfo(Graph *g, char *origin){
 	bool rename = false, relocated = false;
 	//2.2非法性校验1
 	if(str1 == NULL){
-		printf("\n错误：数据输入错误\n");
+		printf("\n错误：数据输入失效！(1109)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -1084,7 +1126,7 @@ bool UpdateBuildingInfo(Graph *g, char *origin){
 		relocated = true;
 	} else{
 		//2.2非法性校验
-		printf("\n错误：数据格式输入错误\n");
+		printf("\n错误：输入格式错误！(1129)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -1111,7 +1153,6 @@ bool CreateBat(){
 	fprintf(batFile, "cd ./graphviz_lite2\n");
 	fprintf(batFile, "set startDir=%%cd%%\n");
 	fprintf(batFile, "npm run serve\n");
-
 	fclose(batFile);
 	return true;
 }
@@ -1119,7 +1160,7 @@ bool ProgramSetting(){
 	setCursorVisible(false);
 	//0.输入页面头
 	PrintPageHead();
-	printf("Campus Navigation System 校园导航系统应用设置..\n");
+	printf("\nCampus Navigation System 校园导航系统应用设置..\n");
 	printf("键盘按下相应设置项数字可对设置进行修改\n\n");
 	//1.当前设置展示
 	printf("1.退出程序后保留缓存文件\t当前为：");
@@ -1138,6 +1179,12 @@ bool ProgramSetting(){
 	}else{
 		printf("本地模式\n");
 	}
+	printf("5.图像跟随程序变化\t\t当前为：");
+	if(settings.Update_Pic_In_Time){
+		printf("跟随\n");
+	}else{
+		printf("不跟随\n");
+	}
 	printf("\n\n\n【退出设置（不保存）[ESC]\t保存并退出设置[ENTER]】\n");
 	
 	//2.设置修改
@@ -1150,7 +1197,7 @@ bool ProgramSetting(){
 			switch (key) {
 				case 49:	//1
 					tempSave = !tempSave;
-					gotoxy(40,11);
+					gotoxy(40,12);
 					if(tempSave){
 						printf("保留    ");
 					}else{
@@ -1159,11 +1206,11 @@ bool ProgramSetting(){
 					break;
 				case 50:	//2
 				case 51:	//3
-					gotoxy(51,13);
+					gotoxy(51,14);
 					printf("暂不支持修改！");
 					break;
 				case 52:	//4
-					gotoxy(40,14);
+					gotoxy(40,15);
 					tempMode++;
 					tempMode = tempMode % 3;
 					if(tempMode){
@@ -1176,8 +1223,12 @@ bool ProgramSetting(){
 						printf("本地模式                 \n");
 					}
 					break;
+				case 53:	//5
+					gotoxy(51,16);
+					printf("暂不支持修改！");
+					break;
 				case 13:	//ENTER
-					gotoxy(20,15);
+					gotoxy(20,17);
 					printf("已保存设置！");
 					settings.Save_Temp_After_Quit = tempSave;
 					settings.Web_Mode = (short)tempMode;
@@ -1185,7 +1236,7 @@ bool ProgramSetting(){
 						CreateBat();
 					}
 				case 27:	//ESC
-					gotoxy(20,15);
+					gotoxy(20,18);
 					goto settingEnd;
 			}
 		}
@@ -1204,9 +1255,11 @@ bool DestroyProgram(){
 		remove("./graphviz_lite2/src/navigation.js");
 		Sleep(1000);
 	}
-	printf("\t程序将停止所有node进程，按任意键退出程序\n");
-	system("pause");
-	system("taskkill /f /im node.exe");
+	if(isNodeAlive){
+		printf("\t程序将停止所有node进程，按任意键确认退出\n\n");
+		system("pause");
+		system("taskkill /f /im node.exe");
+	}
 	return true;
 }
 bool PrintPageHead() {

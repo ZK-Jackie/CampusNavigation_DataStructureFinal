@@ -15,6 +15,10 @@ bool EnQueue(Link *link, int data) {
 	}
 }
 
+bool isQueueable(Link *link){
+	return ((link->rear->spot + 1) % (QueueVol + 1)) != (link->front->spot);
+}
+
 bool isEmpty(Link *link) {
 	return link->rear == link->front;
 }

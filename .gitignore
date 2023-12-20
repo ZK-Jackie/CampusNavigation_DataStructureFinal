@@ -1,0 +1,6 @@
+# ignore key item
+/.ssh
+
+/cmake-build-debug
+
+/src/utils/libiconv

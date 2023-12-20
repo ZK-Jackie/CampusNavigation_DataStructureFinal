@@ -14,11 +14,12 @@ typedef struct {            //封装队列参数
 	DataNode *rear;
 } Link;
 
-extern bool EnQueue(Link *link, int data);
-extern bool isEmpty(Link *link);
-extern DataNode *DeQueue(Link *link);
-extern Link *InitQueue(Link **link);
-extern bool DestroyQueue(Link *link);
-extern int seeFront(Link *link);
+bool EnQueue(Link *link, int data);
+bool isQueueable(Link *link);
+bool isEmpty(Link *link);
+DataNode *DeQueue(Link *link);
+Link *InitQueue(Link **link);
+bool DestroyQueue(Link *link);
+int seeFront(Link *link);
 
 #endif //CAMPUSNAVIGATION_QUEUE_H
