@@ -1,6 +1,8 @@
 # ignore key item
-/.ssh
+.ssh
 
-/cmake-build-debug
+.idea
+# ignore temp item
+/cmake-build-debug/
 
-/src/utils/libiconv
+/src/utils/libiconv/
