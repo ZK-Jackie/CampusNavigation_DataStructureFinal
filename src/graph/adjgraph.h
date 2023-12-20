@@ -5,6 +5,7 @@
 
 #ifndef CAMPUSNAVIGATION_ADJGRAPH_H
 #define CAMPUSNAVIGATION_ADJGRAPH_H
+#define MaxIntro 50
 #define MaxNum 25
 #define NameSize 20
 #define INF 888
@@ -13,6 +14,7 @@ typedef struct node {
 	char data[NameSize];
 	double pos_x;
 	double pos_y;
+	char intro[MaxIntro];
 	bool isAvailable;
 } Node;
 //图的邻接表式存储所需类型

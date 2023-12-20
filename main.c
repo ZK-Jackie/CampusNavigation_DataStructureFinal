@@ -328,12 +328,13 @@ bool InitProgram(Graph **graph, char *fileName) {
 	(*graph)->edgeNum = 0;
 	(*graph)->nodeNum = 0;
 	memset((*graph)->adjMatrix, 0, sizeof((*graph)->adjMatrix));
-	//2.初始化结点名字域和允许生成域
+	//2.初始化结点所有值
 	for (int i = 0; i < MaxNum; ++i) {
 		memset((*graph)->nodes[i].data, 0, sizeof((*graph)->nodes[i].data));
 		(*graph)->nodes[i].isAvailable = false;
 		(*graph)->nodes[i].pos_x = -1.0;
 		(*graph)->nodes[i].pos_y = -1.0;
+		memset((*graph)->nodes[i].intro, 0, sizeof((*graph)->nodes[i].intro));
 	}
 	//3.初始化图的邻接表式存法
 	(*graph)->adjGraph = (AdjGraph *) malloc(sizeof(AdjGraph));
@@ -515,11 +516,11 @@ bool AddBuilding(Graph *g, char *name, bool isLocated, ...){
 	int dup = 0;
 	//队空说明无再可用的SN，则无法添加新的结点
 	if(isEmpty(emptySpot)){
-		printf("\n错误：地图空间不足，添加失败！(518)\n");
+		printf("\n错误：地图空间不足，添加失败！(519)\n");
 		Sleep(1000);
 		return false;
 	}else if( (dup = getSn(g, name)) != -1){
-		printf("\n错误：已存在同名建筑/地点，添加失败！(522)\n");
+		printf("\n错误：已存在同名建筑/地点，添加失败！(523)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -535,12 +536,12 @@ bool AddBuilding(Graph *g, char *name, bool isLocated, ...){
 		va_end(vaList);
 		//参数校验
 		if(x < 0 || y < 0){
-			printf("\n错误：坐标输入格式有误，添加失败！(538)\n");
+			printf("\n错误：坐标输入格式有误，添加失败！(539)\n");
 			Sleep(1000);
 			return false;
 		}
 		if(x > 14 || y > 15){
-			printf("\n错误：坐标超过校园范围，添加失败！(543)\n");
+			printf("\n错误：坐标超过校园范围，添加失败！(544)\n");
 			Sleep(1000);
 			return false;
 		}
@@ -576,7 +577,8 @@ bool DelBuilding(Graph *g, char *name, bool isDelRoad){
 	int nodeSn = getSn(g, name);
 	//没找到，退出
 	if(nodeSn == -1){
-		printf("\n错误：建筑不存在！(579)\n");
+		printf("\n错误：建筑不存在！(580)\n");
+		Sleep(1000);
 		return false;
 	}
 	//2.清空相关信息
@@ -685,19 +687,37 @@ bool UpdateAdjNodeInList(headNode *head, int aim, int weight){
 	return false;
 }
 bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
+	char *str = NULL;
+	bool isIntro = false;
 	//0.数据规范性校验1
 	if(strlen(name) > NameSize){
-		printf("\n错误：建筑名称过长！(690)\n");
+		printf("\n错误：建筑名称过长！(694)\n");
+		Sleep(1000);
 		return false;
 	}
 	//2.更新建筑：改名/该位置即可
 	int nodeSn = getSn(g, name);
 	//2.1校验2
 	if(nodeSn == -1){
-		printf("\n错误：未找到目标建筑！(697)\n");
+		printf("\n错误：未找到目标建筑！(702)\n");
+		Sleep(1000);
 		return false;
 	}
-	if(isRename || isRelocated){
+	//3.改简介
+	printf("请输入建筑简介信息：（不超过25个中文，跳过请提交“n”）\n");
+	scanf("%s", str);
+	getchar();
+	if(!(str == NULL || str[0] == 'n' || str[0] == 'N')){
+		if(strlen(str) < MaxIntro){
+			strcpy(g->nodes[nodeSn].intro, str);
+			isIntro = true;
+		}else{
+			printf("\n错误：简介内容过长！(715)\n");
+			Sleep(1000);
+			return false;
+		}
+	}
+	if(isRename || isRelocated || isIntro){
 		//获取形参列表
 		va_list vaList;
 		//参数初始化
@@ -713,7 +733,8 @@ bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
 		if(isRename){
 			newName = va_arg(vaList, char*);
 			if(strlen(newName) > NameSize){
-				printf("\n错误：建筑名称过长！(716)\n");
+				printf("\n错误：建筑名称过长！(736)\n");
+				Sleep(1000);
 				return false;
 			}
 		}
@@ -723,10 +744,12 @@ bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
 			x = va_arg(vaList,double);
 			y = va_arg(vaList,double);
 			if(x > 14 || y > 15){
-				printf("\n错误：坐标超过校园范围，添加失败！(726)\n");
+				printf("\n错误：坐标超过校园范围，添加失败！(747)\n");
+				Sleep(1000);
 			}
 			if(x < 0 || y < 0){
-				printf("\n错误：坐标输入格式有误，添加失败！(729)\n");
+				printf("\n错误：坐标输入格式有误，添加失败！(751)\n");
+				Sleep(1000);
 			}
 		}
 		if(isRename){
@@ -749,7 +772,7 @@ bool AddRoad(Graph *g, char *origin, char *end, int length, bool isSetPorts, ...
 	int sn1 = getSn(g,origin);
 	int sn2 = getSn(g,end);
 	if(sn1 == -1 && sn2 == -1){
-		printf("\n错误：未找到指定建筑/地点！(752)\n");
+		printf("\n错误：未找到指定建筑/地点！(775)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -782,7 +805,7 @@ bool DelRoad(Graph *g, char *origin, char *end){
 	int sn1 = getSn(g, origin);
 	int sn2 = getSn(g, end);
 	if(sn1 == -1 && sn2 == -1){
-		printf("\n错误：未找到指定建筑/地点！(785)\n");
+		printf("\n错误：未找到指定建筑/地点！(808)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -802,7 +825,7 @@ bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool isSetPort
 	int sn1 = getSn(g, origin);
 	int sn2 = getSn(g, end);
 	if(sn1 == -1 && sn2 == -1){
-		printf("\n错误：未找到指定建筑/地点！(805)\n");
+		printf("\n错误：未找到指定建筑/地点！(828)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -870,7 +893,7 @@ bool Navigate(Graph *g){
 		return true;
 	}
 	if(origin == NULL || dest == NULL){
-		printf("\n错误：数据输入失效！(873)\n");
+		printf("\n错误：数据输入失效！(896)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -880,10 +903,10 @@ bool Navigate(Graph *g){
 	//1.3非法校验
 	if(sn1 == -1 || sn2 == -1){
 		if(sn1 == -1){
-			printf("\n错误：建筑 %s 不存在！(883)\n", origin);
+			printf("\n错误：建筑 %s 不存在！(906)\n", origin);
 		}
 		if(sn2 == -1){
-			printf("\n错误：建筑 %s 不存在！(886)\n", dest);
+			printf("\n错误：建筑 %s 不存在！(909)\n", dest);
 		}
 		Sleep(1000);
 		return false;
@@ -960,6 +983,7 @@ bool SelectBuilding(Graph *g){
 	}else{
 		printf("位置坐标：%.2lf,%.2lf\n",g->nodes[sn1].pos_x, g->nodes[sn1].pos_y);
 	}
+	printf("建筑/地点介绍：%s\n", g->nodes[sn1].intro);
 	printf("与其他建筑道路连接情况：\n");
 	ArcNode *p = g->adjGraph->list[sn1].first;
 	//2.1遍历邻接链表
@@ -1045,11 +1069,11 @@ bool UpdateRoadInfo(Graph *g, char *origin){
 	char *str3 = strtok(NULL,"-");	//开口方向
 	//2.2非法性检验1
 	if(str1 == NULL){
-		printf("\n错误：数据输入失效！(1048)\n");
+		printf("\n错误：数据输入失效！(1072)\n");
 		Sleep(1000);
 		return false;
 	} else if(strlen(str1) > NameSize){
-		printf("\n错误：建筑名称过长！(1052)\n");
+		printf("\n错误：建筑名称过长！(1076)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -1073,7 +1097,7 @@ bool UpdateRoadInfo(Graph *g, char *origin){
 	}
 	//2.4非法性校验
 	if(getSn(g, str1) == -1){
-		printf("\n错误：输入的目标建筑不存在！(1076)\n");
+		printf("\n错误：输入的目标建筑不存在！(1100)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -1106,7 +1130,7 @@ bool UpdateBuildingInfo(Graph *g, char *origin){
 	bool rename = false, relocated = false;
 	//2.2非法性校验1
 	if(str1 == NULL){
-		printf("\n错误：数据输入失效！(1109)\n");
+		printf("\n错误：数据输入失效！(1133)\n");
 		Sleep(1000);
 		return false;
 	}
@@ -1126,7 +1150,7 @@ bool UpdateBuildingInfo(Graph *g, char *origin){
 		relocated = true;
 	} else{
 		//2.2非法性校验
-		printf("\n错误：输入格式错误！(1129)\n");
+		printf("\n错误：输入格式错误！(1153)\n");
 		Sleep(1000);
 		return false;
 	}
