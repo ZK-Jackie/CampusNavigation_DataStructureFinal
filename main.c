@@ -15,9 +15,9 @@ bool InitEdge(int adjMatrix[][MaxNum], AdjGraph *adjGraph, char *str, int *total
 bool DestroyProgram();
 //文件相关
 bool ReadGraphFile(Graph *g);	bool ReturnGraphFile(Graph *g);
-bool ToPicFile(Graph *graph);
+bool ToPicFile(Graph *g);
 bool CreateBat();
-//小工具
+//辅助工具
 bool isConnected(Graph *g, char *origin, char *dest);
 int getSn(Graph *g, char *name);
 bool PrintPageHead();
@@ -32,10 +32,10 @@ bool ProgramSetting();
 bool UpdateRoadInfo(Graph *g, char *origin);
 bool UpdateBuildingInfo(Graph *g, char *origin);
 //建筑规划相关
-bool AddBuilding(Graph *g, char *name, bool isLocated, ...);	bool AddAdjNode(AdjGraph *adj, int srcSn, int resSn, int weight);
-bool DelBuilding(Graph *g, char *name, bool isDelRoad);			bool DelAdjNodeInList(headNode *head, int aim);//删建筑结点要用
-bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...);	bool UpdateAdjNodeInList(headNode *head, int aim, int weight);
-bool AddRoad(Graph *g, char *origin, char *end, int length, bool isSetPorts, ...);
+bool AddBuilding(Graph *g, char *name, bool isLocated, ...);
+bool DelBuilding(Graph *g, char *name, bool isDelRoad);			bool DelAdjNodeInList(HeadNode *head, int aim);//删建筑结点要用
+bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...);	bool UpdateAdjNodeInList(HeadNode *head, int aim, int weight);
+bool AddRoad(Graph *g, char *origin, char *end, int length, bool isSetPorts, ...);	bool AddAdjNode(AdjGraph *adj, int srcSn, int resSn, int weight);
 bool DelRoad(Graph *g, char *origin, char *end);
 bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool isSetPorts, ...);
 //路径相关
@@ -325,7 +325,7 @@ bool InitProgram(Graph **graph) {
 	strcpy(settings.Js_File_Name, "./graphviz_lite1");
 	//1.初始化图
 	(*graph) = malloc(sizeof(Graph));
-	(*graph)->dependency = fopen(settings.Basis_File_Name, "r");
+	(*graph)->basisFile = fopen(settings.Basis_File_Name, "r");
 	(*graph)->edgeNum = 0;
 	(*graph)->nodeNum = 0;
 	memset((*graph)->adjMatrix, 0, sizeof((*graph)->adjMatrix));
@@ -356,7 +356,7 @@ bool InitProgram(Graph **graph) {
 	CreateAdjGraph((*graph)->adjGraph, (*graph)->adjMatrix, (*graph)->nodeNum, (*graph)->edgeNum);
 	return true;
 }
-bool ToPicFile(Graph *graph) {
+bool ToPicFile(Graph *g) {
 	//有可能是JS，也有可能是dot
 	FILE *navFile = NULL;
 	if(settings.Web_Mode){	//网页模式：JS情况下，多写一些
@@ -376,18 +376,18 @@ bool ToPicFile(Graph *graph) {
 		return false;
 	}
 	//文件头
-	fprintf(navFile, "graph G{"
+	fprintf(navFile, "g G{"
 					 "layout=fdp;"
 					 "node[shape=rect, fontname=KaiTi];"
 					 "splines=curved;");
 	//定义点
-	for (int i = 0; i < graph->nodeNum; ++i) {
-		if(graph->nodes[i].isValid){
-			if(graph->nodes[i].pos_x == -1 || graph->nodes[i].pos_y == -1){
-				fprintf(navFile, "%d[label=\"%s\"];", i, GbkToUtf8(graph->nodes[i].data));
+	for (int i = 0; i < g->nodeNum; ++i) {
+		if(g->nodes[i].isValid){
+			if(g->nodes[i].pos_x == -1 || g->nodes[i].pos_y == -1){
+				fprintf(navFile, "%d[label=\"%s\"];", i, GbkToUtf8(g->nodes[i].data));
 			}else{
-				fprintf(navFile, "%d[label=\"%s\", pos=\"%.2f,%.2f!\"];", i, GbkToUtf8(graph->nodes[i].data), graph->nodes[i].pos_x,
-						graph->nodes[i].pos_y);
+				fprintf(navFile, "%d[label=\"%s\", pos=\"%.2f,%.2f!\"];", i, GbkToUtf8(g->nodes[i].data), g->nodes[i].pos_x,
+						g->nodes[i].pos_y);
 			}
 		}
 	}
@@ -396,13 +396,13 @@ bool ToPicFile(Graph *graph) {
 	//定义边：临界矩阵只读上三角区域
 	for (int i = 0; i < MaxNum; ++i) {
 		for (int j = i + 1; j < MaxNum; ++j) {
-			weight = graph->adjMatrix[i][j];
+			weight = g->adjMatrix[i][j];
 			if (weight > 0) {
 				fprintf(navFile, "%d--%d[label=%d", i, j, weight);
-				if ((tail = graph->adjGraph->ports[i][j]) != 0) {    //上三角是tailports值
+				if ((tail = g->adjGraph->ports[i][j]) != 0) {    //上三角是tailports值
 					fprintf(navFile, ",tailport=%c", tail);
 				}
-				if ((head = graph->adjGraph->ports[j][i]) != 0) {    //下三角是headports值
+				if ((head = g->adjGraph->ports[j][i]) != 0) {    //下三角是headports值
 					fprintf(navFile, ",headport=%c", head);
 				}
 				fprintf(navFile, "];");
@@ -426,7 +426,7 @@ bool ToPicFile(Graph *graph) {
 bool ReadGraphFile(Graph *g) {
 	//1.定义变量
 	char tempStr[30];
-	FILE *reader = g->dependency;	/*文件操作*/
+	FILE *reader = g->basisFile;	/*文件操作*/
 	if (reader == NULL) {
 		/*无法打开文件*/
 		system("title Campus Navigation System");
@@ -585,7 +585,7 @@ bool DelBuilding(Graph *g, char *name, bool isDelRoad){
 	//2.清空相关信息
 	//2.1邻接表
 	//目标要被清空的行
-	headNode *aimRow = &g->adjGraph->list[nodeSn];
+	HeadNode *aimRow = &g->adjGraph->list[nodeSn];
 	//检测目标是否为空
 	ArcNode *first = g->adjGraph->list[nodeSn].first;
 	while(first != NULL){
@@ -647,7 +647,7 @@ bool AddAdjNode(AdjGraph *adj, int srcSn, int resSn, int weight){
 
 	return true;
 }
-bool DelAdjNodeInList(headNode *head, int aim){
+bool DelAdjNodeInList(HeadNode *head, int aim){
 	//单向删除结点
 	ArcNode *pre = head->first;
 	ArcNode *p = NULL;
@@ -675,7 +675,7 @@ bool DelAdjNodeInList(headNode *head, int aim){
 	}
 	return false;
 }
-bool UpdateAdjNodeInList(headNode *head, int aim, int weight){
+bool UpdateAdjNodeInList(HeadNode *head, int aim, int weight){
 	ArcNode *pre = head->first;
 	//一般情况，找
 	while(pre != NULL){

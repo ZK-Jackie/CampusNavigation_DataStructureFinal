@@ -1,22 +1,18 @@
-//
-// Created by YZK on 2023/12/15.
-//
-//ç»“ç‚¹ä¿¡æ¯
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include "adjgraph.h"
 
 bool CreateAdjGraph(AdjGraph *g, int adj[MaxNum][MaxNum], int nodeNum, int edgeNum) {
-	//åˆ›å»ºé‚»æ¥è¡¨å‚¨å­˜æ–¹å¼
+	//´´½¨ÁÚ½Ó±í´¢´æ·½Ê½
 	for (int i = 0; i < nodeNum; ++i) {
-		for (int j = nodeNum - 1; j >= 0; --j) {    //æ¬²ç”¨å¤´æ’æ³•ï¼ŒçŸ©é˜µä»åå¾€å‰éå†
+		for (int j = nodeNum - 1; j >= 0; --j) {    //ÓûÓÃÍ·²å·¨£¬¾ØÕó´ÓºóÍùÇ°±éÀú
 			if (adj[i][j] != 0) {
-				//å®šä¹‰ä¸€ä¸ªè¾¹å’Œè¾¹ç»ˆç‚¹ä¸Šçš„ç»“ç‚¹
+				//¶¨ÒåÒ»¸ö±ßºÍ±ßÖÕµãÉÏµÄ½áµã
 				ArcNode *sub = (ArcNode *) malloc(sizeof(ArcNode));
 				sub->sn = j;
 				sub->weight = adj[i][j];
-				//å¤´æ’æ³•è¿›å…¥é‚»æ¥è¡¨
+				//Í·²å·¨½øÈëÁÚ½Ó±í
 				sub->next = g->list[i].first;
 				g->list[i].first = sub;
 			}
@@ -27,110 +23,107 @@ bool CreateAdjGraph(AdjGraph *g, int adj[MaxNum][MaxNum], int nodeNum, int edgeN
 
 
 /**
- * @param adjGraph é‚»æ¥è¡¨å¼å­˜å‚¨çš„å›¾
- * @param origin èµ·å§‹ç»“ç‚¹
- * @param aim ç›®æ ‡ç»“ç‚¹
- * @param nowLength å½“å‰è·¯å¾„é•¿åº¦
- * @param path ä¸´æ—¶è·¯å¾„å‚¨å­˜åœ°
- * @param assign å¯»æ‰¾å®šé•¿è·¯å¾„ï¼Œ0--å¯»æ‰¾æ‰€æœ‰è·¯å¾„ï¼Œ>0--å¯»æ‰¾å®šé•¿è·¯å¾„ï¼ˆä¸å¸¦æƒï¼‰
- * @param visited æ ‡è®°å·²è®¿é—®çš„ç»“ç‚¹
- * @param isFind å‘å‰ä¸€å‡½æ•°æ˜¯å¦æ‰¾åˆ°ç¬¦åˆæ¡ä»¶çš„è·¯å¾„
- * @remark ä¸€ä¸ªæ™®é€šçš„DFSï¼Œé€’å½’å®ç°ï¼ˆæœ‰ç‚¹åƒæ ‘çš„éå†ï¼‰
+ * @param adjGraph ÁÚ½Ó±íÊ½´æ´¢µÄÍ¼
+ * @param origin ÆğÊ¼½áµã
+ * @param aim Ä¿±ê½áµã
+ * @param nowLength µ±Ç°Â·¾¶³¤¶È
+ * @param path ÁÙÊ±Â·¾¶´¢´æµØ
+ * @param assign Ñ°ÕÒ¶¨³¤Â·¾¶£¬0--Ñ°ÕÒËùÓĞÂ·¾¶£¬>0--Ñ°ÕÒ¶¨³¤Â·¾¶£¨²»´øÈ¨£©
+ * @param visited ±ê¼ÇÒÑ·ÃÎÊµÄ½áµã
+ * @param isFind ÏòÇ°Ò»º¯ÊıÊÇ·ñÕÒµ½·ûºÏÌõ¼şµÄÂ·¾¶
+ * @remark Ò»¸öÆÕÍ¨µÄDFS£¬µİ¹éÊµÏÖ£¨ÓĞµãÏñÊ÷µÄ±éÀú£©
  * */
 void getReachableByDFS(AdjGraph *adjGraph, int origin, int aim, int nowLength, int visited[], bool *isFind) {
-	//è®°å½•å½“å‰ä½ç½®å·²è¢«è®¿é—®è¿‡
+	//¼ÇÂ¼µ±Ç°Î»ÖÃÒÑ±»·ÃÎÊ¹ı
 	visited[origin] = 1;
-	if((*isFind)){		//ã€é€’å½’å‡ºå£2ã€‘
+	if((*isFind)){		//¡¾µİ¹é³ö¿Ú2¡¿
 		return;
 	}
-	if (origin == aim) {    //ã€é€’å½’å‡ºå£1ã€‘
-		//é€šçŸ¥å‰ä¸€ä¸ªå‡½æ•°å·²æ‰¾åˆ°ç¬¦åˆæ¡ä»¶çš„è·¯å¾„
+	if (origin == aim) {    //¡¾µİ¹é³ö¿Ú1¡¿
+		//Í¨ÖªÇ°Ò»¸öº¯ÊıÒÑÕÒµ½·ûºÏÌõ¼şµÄÂ·¾¶
 		(*isFind) = true;
 		putchar('\n');
-		visited[origin] = 0;    //é‡ç½®çŠ¶æ€
 		return;
 	}
 	//DFS
-	ArcNode *p = adjGraph->list[origin].first;    //éå†é‚»æ¥è¡¨
+	ArcNode *p = adjGraph->list[origin].first;    //±éÀúÁÚ½Ó±í
 	while (p != NULL) {
 		int newStart = p->sn;
-		if (visited[newStart] != 1) {	//æ²¡è¢«è®¿é—®è¿‡
-			//ä¸€æ¡è·¯èµ°åˆ°é»‘
+		if (visited[newStart] != 1) {	//Ã»±»·ÃÎÊ¹ı
+			//Ò»ÌõÂ·×ßµ½ºÚ
 			getReachableByDFS(adjGraph, newStart, aim, nowLength, visited, isFind);
 		}
-		//ä¸Šä¸€æ¡è·¯èµ°å®Œæ¢ç¬¬äºŒæ¡
+		//ÉÏÒ»ÌõÂ·×ßÍê»»µÚ¶şÌõ
 		p = p->next;
 	}
-	//åˆå§‹åŒ–éå†ç»“æœ
-	visited[origin] = 0;
 }
 
 void FindAllPaths(AdjGraph *g, int origin, int aim, int paths[][MaxNum+1]){
-	//å®šä¹‰ã€åˆå§‹åŒ–pathå’Œvisitedæ•°ç»„
+	//¶¨Òå¡¢³õÊ¼»¯pathºÍvisitedÊı×é
 	int path[MaxNum];
 	int visited[MaxNum];
 	for (int i = 0; i < MaxNum; ++i) {
 		path[i] = 0;
 		visited[i] = 0;
 	}
-	//åˆå§‹åŒ–pathsæ•°ç»„
+	//³õÊ¼»¯pathsÊı×é
 	for (int i = 0; i < MaxNum+1; ++i) {
 		for (int j = 0; j < MaxNum+1; ++j) {
 			paths[i][j] = 0;
 		}
 	}
-	//DFSæ‰¾è·¯
+	//DFSÕÒÂ·
 	FindPathsByDFS(g, origin, aim, 0, path, visited, paths);
 }
 
 /**
- * @param adjGraph ç©ºçš„é‚»æ¥è¡¨å¼å­˜å‚¨çš„å›¾
- * @param origin èµ·å§‹ç»“ç‚¹
- * @param destination ç›®æ ‡ç»“ç‚¹
- * @param nowLength å½“å‰è·¯å¾„é•¿åº¦
- * @param path ä¸´æ—¶è·¯å¾„å‚¨å­˜åœ°
- * @param assign å¯»æ‰¾å®šé•¿è·¯å¾„ï¼Œ0--å¯»æ‰¾æ‰€æœ‰è·¯å¾„ï¼Œ>0--å¯»æ‰¾å®šé•¿è·¯å¾„ï¼ˆä¸å¸¦æƒï¼‰
- * @param visited æ ‡è®°å·²è®¿é—®çš„ç»“ç‚¹
- * @param isFind å‘å‰ä¸€å‡½æ•°æ˜¯å¦æ‰¾åˆ°ç¬¦åˆæ¡ä»¶çš„è·¯å¾„
- * @param paths (0,0)å…¨éƒ¨è·¯å¾„æ•°ç›®ï¼Œ(0,n)ä»£è¡¨ç¬¬nä¸ªè·¯å¾„ä¸­å«çš„ç»“ç‚¹ä¸ªæ•°
- * @remark ä¸€ä¸ªæ™®é€šçš„DFSï¼Œé€’å½’å®ç°ï¼ˆæœ‰ç‚¹åƒæ ‘ï¼‰
+ * @param adjGraph ¿ÕµÄÁÚ½Ó±íÊ½´æ´¢µÄÍ¼
+ * @param origin ÆğÊ¼½áµã
+ * @param destination Ä¿±ê½áµã
+ * @param nowLength µ±Ç°Â·¾¶³¤¶È
+ * @param path ÁÙÊ±Â·¾¶´¢´æµØ
+ * @param assign Ñ°ÕÒ¶¨³¤Â·¾¶£¬0--Ñ°ÕÒËùÓĞÂ·¾¶£¬>0--Ñ°ÕÒ¶¨³¤Â·¾¶£¨²»´øÈ¨£©
+ * @param visited ±ê¼ÇÒÑ·ÃÎÊµÄ½áµã
+ * @param isFind ÏòÇ°Ò»º¯ÊıÊÇ·ñÕÒµ½·ûºÏÌõ¼şµÄÂ·¾¶
+ * @param paths (0,0)È«²¿Â·¾¶ÊıÄ¿£¬(0,n)´ú±íµÚn¸öÂ·¾¶ÖĞº¬µÄ½áµã¸öÊı
+ * @remark Ò»¸öÆÕÍ¨µÄDFS£¬µİ¹éÊµÏÖ£¨ÓĞµãÏñÊ÷£©
  * */
 void FindPathsByDFS(AdjGraph *adjGraph, int origin, int destination, int nowLength, int path[], int visited[], int paths[][MaxNum+1]){
-	//æ›´æ–°è·¯å¾„
+	//¸üĞÂÂ·¾¶
 	path[nowLength] = origin;
 	nowLength++;
-	//è®°å½•å½“å‰ä½ç½®å·²è¢«è®¿é—®è¿‡
+	//¼ÇÂ¼µ±Ç°Î»ÖÃÒÑ±»·ÃÎÊ¹ı
 	visited[origin] = 1;
 
 	if(paths[0][0] == 25){
 		return;
 	}
-	if(origin == destination){	//ã€é€’å½’å‡ºå£ã€‘
-		paths[0][0]++;//æ€»è·¯å¾„æ•°å¢åŠ 
-		paths[0][paths[0][0]] = nowLength;//å¡«å……å½“å‰è·¯å¾„é•¿åº¦
+	if(origin == destination){	//¡¾µİ¹é³ö¿Ú¡¿
+		paths[0][0]++;//×ÜÂ·¾¶ÊıÔö¼Ó
+		paths[0][paths[0][0]] = nowLength;//Ìî³äµ±Ç°Â·¾¶³¤¶È
 		for (int i = 0; i < nowLength; ++i) {
 			paths[paths[0][0]][i] = path[i];//
 		}
-		visited[origin] = 0;	//é‡ç½®çŠ¶æ€å¡«å……å½“å‰è·¯å¾„
+		visited[origin] = 0;	//ÖØÖÃ×´Ì¬Ìî³äµ±Ç°Â·¾¶
 		return;
 	}
 
 	//DFS
-	ArcNode *p = adjGraph->list[origin].first;	//éå†é‚»æ¥è¡¨
+	ArcNode *p = adjGraph->list[origin].first;	//±éÀúÁÚ½Ó±í
 	while(p != NULL){
 		int newStart = p->sn;
 		if(visited[newStart] != 1){
-			//ä¸€æ¡è·¯èµ°åˆ°é»‘
+			//Ò»ÌõÂ·×ßµ½ºÚ
 			FindPathsByDFS(adjGraph, newStart, destination, nowLength, path, visited, paths);
 		}
-		//ä¸Šä¸€æ¡è·¯èµ°å®Œæ¢ç¬¬äºŒæ¡
+		//ÉÏÒ»ÌõÂ·×ßÍê»»µÚ¶şÌõ
 		p = p->next;
 	}
-	//é‡ç½®éå†ç»“æœ
+	//ÖØÖÃ±éÀú½á¹û
 	visited[origin] = 0;
 }
 
-//ç‰©ç†size
+//ÎïÀísize
 bool reverseArr(int *arr, int size){
 	int temp;
 	for (int i = 0; i < size/2; ++i) {
@@ -141,33 +134,33 @@ bool reverseArr(int *arr, int size){
 
 	return true;
 }
-
-int Dijkstra(int adjMatrix[][MaxNum], int origin, int final, int nodeNums, int ret[], int retWeight[],int *totalWeight){
+//ÈÎÎñ£ºĞèÒªĞŞ¸Ä£¬nodeNums²»ÎÈ¶¨£¬¿¼ÂÇÌæ»»³ÉMaxNum
+int Dijkstra(int adjMatrix[][MaxNum], int origin, int dest, int nodeNums, int ret[], int retWeight[], int *totalWeights){
 	int set[nodeNums];
 	int distance[nodeNums];
 	int path[nodeNums];
 
-	//1.åˆå§‹åŒ–
+	//1.³õÊ¼»¯
 	for (int i = 0; i < nodeNums; ++i) {
-		//åˆå§‹åŒ–é›†åˆ
+		//³õÊ¼»¯¼¯ºÏ
 		set[i] = 0;
-		//åˆå§‹åŒ–è·ç¦»
+		//³õÊ¼»¯¾àÀë
 		distance[i] = adjMatrix[origin][i];
-		//åˆå§‹åŒ–è·¯å¾„
+		//³õÊ¼»¯Â·¾¶
 		if(distance[i] == 0){
 			path[i] = -1;
 		} else {
 			path[i] = origin;
 		}
 	}
-	//èµ·å§‹ç»“ç‚¹å…¥é›†åˆ
+	//ÆğÊ¼½áµãÈë¼¯ºÏ
 	set[origin] = 1;
 
 	int minDistance;
 	int minPoint;
-	//5.æ¯æ¬¡setè¿›ä¸€ä¸ªï¼Œåˆ™æ€»å…±éœ€è¦å¾ªç¯nodeNums - 1æ¬¡
+	//5.Ã¿´Îset½øÒ»¸ö£¬Ôò×Ü¹²ĞèÒªÑ­»·nodeNums - 1´Î
 	for (int i = 0; i < nodeNums - 1; ++i) {
-		//2.æ‰¾distanceä¸­æœ€å°ä¸”ä¸åœ¨é›†åˆä¸­çš„ç‚¹
+		//2.ÕÒdistanceÖĞ×îĞ¡ÇÒ²»ÔÚ¼¯ºÏÖĞµÄµã
 		minDistance = INF;
 		for (int j = 0; j < nodeNums; ++j) {
 			if(distance[j] != 0 && distance[j] < minDistance && set[j] == 0){
@@ -175,26 +168,26 @@ int Dijkstra(int adjMatrix[][MaxNum], int origin, int final, int nodeNums, int r
 				minDistance = distance[j];
 			}
 		}
-		//3.å°†è¯¥ç‚¹åŠ å…¥é›†åˆ
+		//3.½«¸Ãµã¼ÓÈë¼¯ºÏ
 		set[minPoint] = 1;
-		//4.æ›´æ–°distanceï¼ˆåªæ›´æ–°ä¸åœ¨setä¸­çš„ç»“ç‚¹ï¼‰
+		//4.¸üĞÂdistance£¨Ö»¸üĞÂ²»ÔÚsetÖĞµÄ½áµã£©
 		for (int j = 0; j < nodeNums; ++j) {
 			if(set[j] == 0){
-				//è¿˜éœ€ä¿è¯æ–°è·¯å¾„çš„é•¿åº¦å°äºæ—§è·¯å¾„çš„é•¿åº¦
+				//»¹Ğè±£Ö¤ĞÂÂ·¾¶µÄ³¤¶ÈĞ¡ÓÚ¾ÉÂ·¾¶µÄ³¤¶È
 				if(adjMatrix[minPoint][j] != 0 && (distance[minPoint] + adjMatrix[minPoint][j] < distance[j] || distance[j] == 0)){
 					distance[j] = distance[minPoint] + adjMatrix[minPoint][j];
-					//æ›´æ–°path
+					//¸üĞÂpath
 					path[j] = minPoint;
 				}
 			}
 		}
 	}
 
-	//1.å¡«å……è·¯å¾„æ•°ç»„
-	//å‡½æ•°è¿”å›å€¼æ˜¯ä¸€ä¸ªæœ‰æ•ˆæ•°æ®çš„ä¸‹æ ‡  ä¹Ÿå°±æ˜¯èµ·ç‚¹  ä»è¯¥ä¸‹æ ‡å‘å‰éå†å³ä¸ºæœ€çŸ­è·¯å¾„
+	//1.Ìî³äÂ·¾¶Êı×é
+	//º¯Êı·µ»ØÖµÊÇÒ»¸öÓĞĞ§Êı¾İµÄÏÂ±ê  Ò²¾ÍÊÇÆğµã  ´Ó¸ÃÏÂ±êÏòÇ°±éÀú¼´Îª×î¶ÌÂ·¾¶
 	int retSize = 0;
-	int cur = final;
-	//ä»ç»ˆç‚¹å‘èµ·ç‚¹å¡«å……
+	int cur = dest;
+	//´ÓÖÕµãÏòÆğµãÌî³ä
 	while (cur != origin){
 		ret[retSize] = cur;
 		cur = path[cur];
@@ -202,16 +195,16 @@ int Dijkstra(int adjMatrix[][MaxNum], int origin, int final, int nodeNums, int r
 	}
 	ret[retSize] = origin;
 	retSize++;
-	//æ•°ç»„åè½¬
+	//Êı×é·´×ª
 	reverseArr(ret, retSize);
-	//2.å¡«å……è·¯å¾„é•¿åº¦æ•°ç»„
+	//2.Ìî³äÂ·¾¶³¤¶ÈÊı×é
 	int pre = 0;
 	for (int i = 0; i < retSize; ++i) {
 		retWeight[i] = distance[ret[i]] - pre;
 		pre = distance[ret[i]];
 	}
-	//3.å¡«å……æ€»æƒå€¼
-	(*totalWeight) = distance[final];
+	//3.Ìî³ä×ÜÈ¨Öµ
+	(*totalWeights) = distance[dest];
 
 	return retSize;
 }

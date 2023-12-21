@@ -25,9 +25,9 @@ typedef struct aNode {//边+终边上的结点+结点数据
 } ArcNode;
 typedef struct vNode {
 	ArcNode *first;
-} headNode;
+} HeadNode;
 typedef struct graph {
-	headNode list[MaxNum];
+	HeadNode list[MaxNum];
 	char ports[MaxNum][MaxNum];
 } AdjGraph;
 
@@ -36,14 +36,14 @@ typedef struct {
 	AdjGraph *adjGraph;
 	int adjMatrix[MaxNum][MaxNum];
 	Node nodes[MaxNum];
-	FILE *dependency;
+	FILE *basisFile;
 	int nodeNum;    //物理个数
 	int edgeNum;    //物理个数
 } Graph;
 
 extern bool CreateAdjGraph(AdjGraph *g, int adj[MaxNum][MaxNum], int nodeNum, int edgeNum);
 extern void getReachableByDFS(AdjGraph *adjGraph, int origin, int aim, int nowLength, int visited[], bool *isFind);
-extern int Dijkstra(int adjMatrix[][MaxNum], int origin, int final, int nodeNums, int ret[], int retWeight[],int *totalWeight);
+extern int Dijkstra(int adjMatrix[][MaxNum], int origin, int dest, int nodeNums, int ret[], int retWeight[], int *totalWeights);
 extern void FindPathsByDFS(AdjGraph *adjGraph, int origin, int destination, int nowLength, int path[], int visited[], int paths[][MaxNum+1]);
 extern void FindAllPaths(AdjGraph *g, int origin, int aim, int paths[][MaxNum+1]);
 
