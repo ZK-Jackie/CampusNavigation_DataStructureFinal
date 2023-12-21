@@ -9,16 +9,16 @@
 #include "queue.h"
 #include "adjgraph.h"
 //初始化相关
-bool InitProgram(Graph **graph, char *fileName);
+bool InitProgram(Graph **graph);
 bool InitNode(Graph *graph, char *str);
-bool InitEdge(int adjMatrix[][MaxNum], AdjGraph *g, char *str, int *total);
+bool InitEdge(int adjMatrix[][MaxNum], AdjGraph *adjGraph, char *str, int *total);
 bool DestroyProgram();
 //文件相关
-bool ReadGraphFile(Graph *graph);
-bool ToFile(Graph *graph);
+bool ReadGraphFile(Graph *g);	bool ReturnGraphFile(Graph *g);
+bool ToPicFile(Graph *graph);
 bool CreateBat();
 //小工具
-bool isConnected(Graph *g, char *origin, char *destination);
+bool isConnected(Graph *g, char *origin, char *dest);
 int getSn(Graph *g, char *name);
 bool PrintPageHead();
 /*情景问题解决函数*/
@@ -40,8 +40,8 @@ bool DelRoad(Graph *g, char *origin, char *end);
 bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool isSetPorts, ...);
 //路径相关
 bool Navigate(Graph *g);
-int FShortestPaths(Graph *g, int origin, int destination, int path[], int pathWeight[]);
-bool isReachable(Graph *g, char *origin, char *end);
+int FShortestPaths(Graph *g, int origin, int dest, int path[], int pathWeight[]);
+bool isReachable(Graph *g, char *origin, char *dest);
 /*一些全局变量*/
 //空位队列
 Link *emptySpot;
@@ -63,7 +63,7 @@ typedef struct {
 Setting settings;
 int main() {
 	Graph *graph;
-	InitProgram(&graph, "basis.txt");
+	InitProgram(&graph);
 
 	while(1){
 		menu(graph);
@@ -120,6 +120,7 @@ void menu(Graph *g){
 		case '6':
 		case 'n':
 		case 'N':
+			ReturnGraphFile(g);
 			//退出程序
 			DestroyProgram();
 			printf("\t\t\t再见！");
@@ -161,7 +162,7 @@ bool SelectMap(Graph *g){
 	switch (code) {
 		case '1':	//查看地图
 			//新生成文件，根据设置确定打开方式
-			ToFile(g);
+			ToPicFile(g);
 			if(settings.Web_Mode){
 				if(settings.Web_Mode == 1){	//网页1-本地网页
 					strcat(startPicCmd, settings.Webpic1_File_Name);
@@ -249,7 +250,7 @@ bool AddBuildingInfo(Graph *g){
 	if(AddBuilding(g, name, located, x, y)){
 		printf("\n建筑添加成功！\n");
 		Sleep(1500);
-		ToFile(g);
+		ToPicFile(g);
 	}
 	return false;
 }
@@ -303,7 +304,7 @@ bool ReachableTest(Graph *g){
 	Sleep(2000);
 	return false;
 }
-bool InitProgram(Graph **graph, char *fileName) {
+bool InitProgram(Graph **graph) {
 	//0.程序设置初始化
 	//0.1清空
 	memset(settings.Basis_File_Name, 0, sizeof(settings.Basis_File_Name));
@@ -313,7 +314,7 @@ bool InitProgram(Graph **graph, char *fileName) {
 	memset(settings.Webpic1_File_Name, 0, sizeof(settings.Webpic1_File_Name));
 	memset(settings.Webpic2_File_Name, 0, sizeof(settings.Webpic2_File_Name));
 	//0.2赋值
-	strcpy(settings.Basis_File_Name, "basis.txt");
+	strcpy(settings.Basis_File_Name, "basis.txt");	//默认读取basis.txt
 	settings.Save_Temp_After_Quit = true;	//默认不清除缓存
 	settings.Update_Pic_In_Time = true;		//默认自动更新图
 	strcpy(settings.Png_File_Name, "navigation.png");
@@ -324,14 +325,14 @@ bool InitProgram(Graph **graph, char *fileName) {
 	strcpy(settings.Js_File_Name, "./graphviz_lite1");
 	//1.初始化图
 	(*graph) = malloc(sizeof(Graph));
-	(*graph)->dependency = fopen(fileName, "r");
+	(*graph)->dependency = fopen(settings.Basis_File_Name, "r");
 	(*graph)->edgeNum = 0;
 	(*graph)->nodeNum = 0;
 	memset((*graph)->adjMatrix, 0, sizeof((*graph)->adjMatrix));
 	//2.初始化结点所有值
 	for (int i = 0; i < MaxNum; ++i) {
 		memset((*graph)->nodes[i].data, 0, sizeof((*graph)->nodes[i].data));
-		(*graph)->nodes[i].isAvailable = false;
+		(*graph)->nodes[i].isValid = false;
 		(*graph)->nodes[i].pos_x = -1.0;
 		(*graph)->nodes[i].pos_y = -1.0;
 		memset((*graph)->nodes[i].intro, 0, sizeof((*graph)->nodes[i].intro));
@@ -355,7 +356,7 @@ bool InitProgram(Graph **graph, char *fileName) {
 	CreateAdjGraph((*graph)->adjGraph, (*graph)->adjMatrix, (*graph)->nodeNum, (*graph)->edgeNum);
 	return true;
 }
-bool ToFile(Graph *graph) {
+bool ToPicFile(Graph *graph) {
 	//有可能是JS，也有可能是dot
 	FILE *navFile = NULL;
 	if(settings.Web_Mode){	//网页模式：JS情况下，多写一些
@@ -381,7 +382,7 @@ bool ToFile(Graph *graph) {
 					 "splines=curved;");
 	//定义点
 	for (int i = 0; i < graph->nodeNum; ++i) {
-		if(graph->nodes[i].isAvailable){
+		if(graph->nodes[i].isValid){
 			if(graph->nodes[i].pos_x == -1 || graph->nodes[i].pos_y == -1){
 				fprintf(navFile, "%d[label=\"%s\"];", i, GbkToUtf8(graph->nodes[i].data));
 			}else{
@@ -422,10 +423,10 @@ bool ToFile(Graph *graph) {
 	}
 	return true;
 }
-bool ReadGraphFile(Graph *graph) {
+bool ReadGraphFile(Graph *g) {
 	//1.定义变量
 	char tempStr[30];
-	FILE *reader = graph->dependency;	/*文件操作*/
+	FILE *reader = g->dependency;	/*文件操作*/
 	if (reader == NULL) {
 		/*无法打开文件*/
 		system("title Campus Navigation System");
@@ -439,9 +440,9 @@ bool ReadGraphFile(Graph *graph) {
 		fscanf(reader, "%s", tempStr);    /*读取一行数据存入temp后，文件光标会自动移动至下一行*/
 		//3.分流：有冒号说明为结点定义；有减号说明为边定义
 		if(strchr(tempStr, ':') != NULL){
-			InitNode(graph, tempStr);
+			InitNode(g, tempStr);
 		}else if(strchr(tempStr, '-') != NULL){
-			InitEdge(graph->adjMatrix, graph->adjGraph, tempStr, &graph->edgeNum);
+			InitEdge(g->adjMatrix, g->adjGraph, tempStr, &g->edgeNum);
 		}else{
 			//有可能有问题
 		}
@@ -475,7 +476,7 @@ bool InitNode(Graph *graph, char *str) {
 
 	return true;
 }
-bool InitEdge(int adjMatrix[][MaxNum], AdjGraph *g, char *str, int *edgeNum) {
+bool InitEdge(int adjMatrix[][MaxNum], AdjGraph *adjGraph, char *str, int *edgeNum) {
 	(*edgeNum)++;
 	//1.定义变量并初始化
 	int sn1, sn2, weight;
@@ -499,12 +500,12 @@ bool InitEdge(int adjMatrix[][MaxNum], AdjGraph *g, char *str, int *edgeNum) {
 	adjMatrix[sn2][sn1] = weight;
 	switch (portSize) {
 		case 3:
-			g->ports[sn2][sn1] = tempPorts[2];
+			adjGraph->ports[sn2][sn1] = tempPorts[2];
 		case 1:
-			g->ports[sn1][sn2] = tempPorts[0];
+			adjGraph->ports[sn1][sn2] = tempPorts[0];
 			break;
 		case 2:
-			g->ports[sn2][sn1] = tempPorts[1];
+			adjGraph->ports[sn2][sn1] = tempPorts[1];
 			break;
 		default:
 			break;
@@ -550,7 +551,7 @@ bool AddBuilding(Graph *g, char *name, bool isLocated, ...){
 	int newNodeSn = DeQueue(emptySpot)->sn;
 	//2.填充结点名字信息/位置信息
 	strcpy(g->nodes[newNodeSn].data, name);
-	g->nodes[newNodeSn].isAvailable = true;
+	g->nodes[newNodeSn].isValid = true;
 	g->nodes[newNodeSn].pos_x = x;
 	g->nodes[newNodeSn].pos_y = y;
 	//3.更新结点数
@@ -562,7 +563,7 @@ int getSn(Graph *g, char *name){
 	//找，没找到返回Sn
 	int ret = -1;
 	for (int i = 0; i < MaxNum; ++i) {
-		if(strcmp(g->nodes[i].data,name) == 0 && g->nodes[i].isAvailable){
+		if(strcmp(g->nodes[i].data,name) == 0 && g->nodes[i].isValid){
 			ret = i;
 			break;
 		}
@@ -618,7 +619,7 @@ bool DelBuilding(Graph *g, char *name, bool isDelRoad){
 	memset(g->nodes[nodeSn].data, 0, sizeof(g->nodes[nodeSn].data));
 	g->nodes[nodeSn].pos_x = -1.0;
 	g->nodes[nodeSn].pos_y = -1.0;
-	g->nodes[nodeSn].isAvailable = false;
+	g->nodes[nodeSn].isValid = false;
 	//3.新sn可用，入队
 	EnQueue(emptySpot,nodeSn);
 	//4.输出提示信息
@@ -687,7 +688,8 @@ bool UpdateAdjNodeInList(headNode *head, int aim, int weight){
 	return false;
 }
 bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
-	char *str = NULL;
+	char str[MaxIntro];
+	memset(str, 0, sizeof(str));
 	bool isIntro = false;
 	//0.数据规范性校验1
 	if(strlen(name) > NameSize){
@@ -705,7 +707,7 @@ bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
 	}
 	//3.改简介
 	printf("请输入建筑简介信息：（不超过25个中文，跳过请提交“n”）\n");
-	scanf("%s", str);
+	scanf_s("%s", str);
 	getchar();
 	if(!(str == NULL || str[0] == 'n' || str[0] == 'N')){
 		if(strlen(str) < MaxIntro){
@@ -848,10 +850,10 @@ bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool isSetPort
 	}
 	return true;
 }
-bool isReachable(Graph *g, char *origin, char *end){
+bool isReachable(Graph *g, char *origin, char *dest){
 	//无需多言
 	int startSn = getSn(g,origin);
-	int finalSn = getSn(g,end);
+	int finalSn = getSn(g, dest);
 
 	int visited[MaxNum];
 	for (int i = 0; i < MaxNum; ++i) {
@@ -863,10 +865,10 @@ bool isReachable(Graph *g, char *origin, char *end){
 
 	return isFind;
 }
-int FShortestPaths(Graph *g, int origin, int destination, int path[], int pathWeight[]){
+int FShortestPaths(Graph *g, int origin, int dest, int path[], int pathWeight[]){
 	int totalWeight = 0;
 	int pathSize;
-	pathSize = Dijkstra(g->adjMatrix, origin, destination, g->nodeNum, path, pathWeight, &totalWeight);
+	pathSize = Dijkstra(g->adjMatrix, origin, dest, g->nodeNum, path, pathWeight, &totalWeight);
 	return pathSize;
 }
 bool Navigate(Graph *g){
@@ -934,9 +936,9 @@ bool Navigate(Graph *g){
 
 	return false;
 }
-bool isConnected(Graph *g, char *origin, char *destination){
+bool isConnected(Graph *g, char *origin, char *dest){
 	int sn1 = getSn(g,origin);
-	int sn2 = getSn(g,destination);
+	int sn2 = getSn(g, dest);
 	ArcNode *p = g->adjGraph->list[sn1].first;
 	while(p != NULL){
 		if(p->sn == sn2){
@@ -1009,13 +1011,13 @@ bool SelectBuilding(Graph *g){
 	switch (code) {
 		case '1':
 			UpdateBuildingInfo(g, origin);
-			ToFile(g);
+			ToPicFile(g);
 			printf("操作完成，正在返回上一级页面..");
 			Sleep(1500);
 			break;
 		case '2':
 			UpdateRoadInfo(g, origin);
-			ToFile(g);
+			ToPicFile(g);
 			printf("操作完成，正在返回上一级页面..");
 			Sleep(1500);
 			break;
@@ -1032,7 +1034,7 @@ bool SelectBuilding(Graph *g){
 				printf("\n无效的操作码！\n");
 				Sleep(1000);
 			}
-			ToFile(g);
+			ToPicFile(g);
 			break;
 		case '4':
 		case 'n':
@@ -1120,14 +1122,14 @@ bool UpdateBuildingInfo(Graph *g, char *origin){
 	char *newName;
 	double x, y;
 	//1.读取用户输入【预计用户最多能输入25个字（包括\0）】
-	printf("\n请输入新建筑信息：（建筑名最多为8个中文字符；坐标均为正数，仅支持一位小数；符号均为英文符号）\n格式：【新名字（不可含数字符号字符）:新x坐标,新y坐标】，缺省的元素无需输入冗余的符号\n");
+	printf("\n请输入新建筑信息：（建筑名最多为8个中文字符；坐标均为正数，仅支持一位小数；符号均为英文符号）\n格式：【新名字（不可含数字符号字符）:新x坐标,新y坐标】，缺省的元素无需输入冗余的符号，输入“n”放弃修改该条目\n");
 	scanf_s("%s", input);
 	getchar();
 	//2.分析用户输入
 	//2.1处理input数组
 	char *str1 = strtok(input,":");
 	char *str2 = strtok(NULL,":");
-	bool rename = false, relocated = false;
+	bool rename = false, relocated = false, remain = false;
 	//2.2非法性校验1
 	if(str1 == NULL){
 		printf("\n错误：数据输入失效！(1133)\n");
@@ -1135,6 +1137,10 @@ bool UpdateBuildingInfo(Graph *g, char *origin){
 		return false;
 	}
 	//2.3分流分析
+	if(str1[0] == 'n' || str1[0] == 'N'){	//情况4：不修改，想改简介
+		remain = true;
+		goto intro;
+	}
 	if(str2 == NULL && strchr(str1,',') != NULL){	//情况1：不给建筑名，只指定坐标
 		x = parseDouble(strtok(str1,","));
 		y = parseDouble(strtok(NULL,","));
@@ -1148,12 +1154,13 @@ bool UpdateBuildingInfo(Graph *g, char *origin){
 		x = parseDouble(strtok(str2,","));
 		y = parseDouble(strtok(NULL,","));
 		relocated = true;
-	} else{
+	}else{
 		//2.2非法性校验
 		printf("\n错误：输入格式错误！(1153)\n");
 		Sleep(1000);
 		return false;
 	}
+	intro:
 	//3.多种情况下的不同参数列表
 	if(rename && relocated){	//情况1：重命名，重定位
 		UpdateBuilding(g, origin, true, true, newName, x, y);
@@ -1161,6 +1168,8 @@ bool UpdateBuildingInfo(Graph *g, char *origin){
 		UpdateBuilding(g, origin, true, false, newName);
 	}else if(!rename && relocated){	//情况3：重定位
 		UpdateBuilding(g, origin, false, true, x, y);
+	}else if(remain){
+		UpdateBuilding(g, origin, false, false);
 	}
 	return true;
 }
@@ -1291,5 +1300,39 @@ bool PrintPageHead() {
 		printf("===");
 	}
 	putchar('\n');
+	return true;
+}
+bool ReturnGraphFile(Graph *g){
+	FILE *basis_return = fopen("basis_return.txt","w");
+	//异常校验
+	if(basis_return == NULL){
+		printf("\n错误：无法创建basis文件！（1308）\n");
+		return false;
+	}
+	//1.还原node数组
+	for (int i = 0; i < g->nodeNum; ++i) {
+		if(g->nodes[i].isValid){
+			fprintf(basis_return,"%d:%s:%.2lf,%.2lf\n",i, GbkToUtf8(g->nodes[i].data),g->nodes[i].pos_x,g->nodes[i].pos_x);
+		}
+	}
+	//2.还原边，只看adj矩阵的上三角，看port矩阵的全部
+	for (int i = 0; i < MaxNum; ++i) {
+		for (int j = i + 1; j < MaxNum; ++j) {
+			if(g->adjMatrix[i][j] != 0){
+				fprintf(basis_return,"%d-%d-%d",i,j,g->adjMatrix[i][j]);
+				if(g->adjGraph->ports[i][j] != 0 || g->adjGraph->ports[j][i] != 0)
+					fprintf(basis_return, "-");
+				if(g->adjGraph->ports[i][j] != 0)
+					fprintf(basis_return,"%c",g->adjGraph->ports[i][j]);
+				if(g->adjGraph->ports[j][i] != 0)
+					fprintf(basis_return,",%c",g->adjGraph->ports[j][i]);
+				fprintf(basis_return,"\n");
+			}
+		}
+	}
+	//3.OK
+	fclose(basis_return);
+	printf("\t\t  文件写入完毕\n");
+	Sleep(1000);
 	return true;
 }

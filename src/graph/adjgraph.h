@@ -15,7 +15,7 @@ typedef struct node {
 	double pos_x;
 	double pos_y;
 	char intro[MaxIntro];
-	bool isAvailable;
+	bool isValid;
 } Node;
 //图的邻接表式存储所需类型
 typedef struct aNode {//边+终边上的结点+结点数据
