@@ -81,7 +81,11 @@ int parseInt(char *str){
 		return -1;
 	}
 	int ret = 0;
-	for (int i = 0; i < strlen(str); ++i) {
+	int len = (int)strlen(str);
+	for (int i = 0; i < len; ++i) {
+		if(str[i] < '0' || str[i] > '9'){
+			return -1;
+		}
 		ret *= 10;
 		ret += str[i] - '0';
 	}
@@ -99,6 +103,8 @@ double parseDouble(char *str){
 		if(str[i] == '.'){
 			i++;
 			isFrac = true;
+		} else if(str[i] > '9' || str[i] < '0'){
+			return -1.0;
 		}
 		ret *= 10;
 		ret += str[i] - '0';

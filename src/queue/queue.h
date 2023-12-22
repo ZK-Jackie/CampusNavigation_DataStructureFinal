@@ -1,5 +1,3 @@
-#include <stdbool.h>
-
 #ifndef CAMPUSNAVIGATION_QUEUE_H
 #define CAMPUSNAVIGATION_QUEUE_H
 #define QueueVol 25

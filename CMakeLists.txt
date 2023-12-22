@@ -18,5 +18,5 @@ include_directories(src)
 
 add_executable(CampusNavigation main.c)
 
-#link to my library
+#link to libraries
 target_link_libraries(CampusNavigation graphFunctions queueFunctions utilsFunctions)

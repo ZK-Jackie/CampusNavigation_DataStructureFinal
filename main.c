@@ -20,6 +20,7 @@ bool CreateBat();
 //辅助工具
 bool isConnected(Graph *g, char *origin, char *dest);
 int getSn(Graph *g, char *name);
+int getSnInBasis(int basisNum);
 bool PrintPageHead();
 /*情景问题解决函数*/
 //信息相关
@@ -29,18 +30,17 @@ bool AddBuildingInfo(Graph *g);
 bool ReachableTest(Graph *g);
 bool SelectBuilding(Graph *g);
 bool ProgramSetting();
-bool UpdateRoadInfo(Graph *g, char *origin);
+bool ModifyRoadInfo(Graph *g, char *name);
 bool UpdateBuildingInfo(Graph *g, char *origin);
 //建筑规划相关
 bool AddBuilding(Graph *g, char *name, bool isLocated, ...);
-bool DelBuilding(Graph *g, char *name, bool isDelRoad);			bool DelAdjNodeInList(HeadNode *head, int aim);//删建筑结点要用
+bool DelBuilding(Graph *g, char *name, bool setDelRoad);			bool DelAdjNodeInList(HeadNode *head, int aim);//删建筑结点要用
 bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...);	bool UpdateAdjNodeInList(HeadNode *head, int aim, int weight);
-bool AddRoad(Graph *g, char *origin, char *end, int length, bool isSetPorts, ...);	bool AddAdjNode(AdjGraph *adj, int srcSn, int resSn, int weight);
+bool AddRoad(Graph *g, char *origin, char *end, int length, bool setPorts, ...);	bool AddAdjNode(AdjGraph *adj, int srcSn, int resSn, int weight);
 bool DelRoad(Graph *g, char *origin, char *end);
-bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool isSetPorts, ...);
+bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool setPorts, ...);
 //路径相关
 bool Navigate(Graph *g);
-int FShortestPaths(Graph *g, int origin, int dest, int path[], int pathWeight[]);
 bool isReachable(Graph *g, char *origin, char *dest);
 /*一些全局变量*/
 //空位队列
@@ -57,14 +57,12 @@ typedef struct {
 	char Basis_File_Name[32];
 	short Web_Mode;
 	char Dot_File_Name[32];
-	char Js_File_Name[32];
 	bool Update_Pic_In_Time;
 }Setting;
 Setting settings;
 int main() {
 	Graph *graph;
 	InitProgram(&graph);
-
 	while(1){
 		menu(graph);
 	}
@@ -249,8 +247,8 @@ bool AddBuildingInfo(Graph *g){
 	//3.参数递交及页面跳转
 	if(AddBuilding(g, name, located, x, y)){
 		printf("\n建筑添加成功！\n");
-		Sleep(1500);
 		ToPicFile(g);
+		Sleep(1500);
 	}
 	return false;
 }
@@ -258,10 +256,10 @@ bool ReachableTest(Graph *g){
 	//0.清屏，输出页面头
 	system("cls");
 	PrintPageHead();
-	printf("可达性校验..\n");
+	printf("可达性校验..（输入“n”返回上一级菜单）\n");
 	//1.读取用户信息
-	char *origin;
-	char *dest;
+	char origin[20];
+	char dest[20];
 	//1.1读取信息	//1.2返回上一级
 	printf("请输入起始地：");
 	scanf_s("%s", origin);
@@ -276,7 +274,7 @@ bool ReachableTest(Graph *g){
 		return true;
 	}
 	//1.4非法性校验
-	if(origin == NULL || dest == NULL){
+	if(strlen(origin) == 0 || strlen(dest) == 0){
 		printf("\n错误：数据输入失效！(279)\n");
 		Sleep(1000);
 		return false;
@@ -287,12 +285,12 @@ bool ReachableTest(Graph *g){
 		return false;
 	}
 	if(getSn(g,origin) == -1){
-		printf("\n错误：起始建筑/地点不存在！(289)\n");
-		Sleep(1000);
+		printf("\n不可达，起点建筑/地点不存在！(289)\n");
+		Sleep(2000);
 		return false;
 	}else if(getSn(g,dest) == -1){
-		printf("\n错误：终点建筑/地点不存在！(293)\n");
-		Sleep(1000);
+		printf("\n不可达，终点建筑/地点不存在！\n");
+		Sleep(2000);
 		return false;
 	}
 	//2.判断可达		//3.反馈
@@ -310,7 +308,6 @@ bool InitProgram(Graph **graph) {
 	memset(settings.Basis_File_Name, 0, sizeof(settings.Basis_File_Name));
 	memset(settings.Png_File_Name, 0, sizeof(settings.Png_File_Name));
 	memset(settings.Dot_File_Name, 0, sizeof(settings.Dot_File_Name));
-	memset(settings.Js_File_Name, 0, sizeof(settings.Js_File_Name));
 	memset(settings.Webpic1_File_Name, 0, sizeof(settings.Webpic1_File_Name));
 	memset(settings.Webpic2_File_Name, 0, sizeof(settings.Webpic2_File_Name));
 	//0.2赋值
@@ -322,7 +319,6 @@ bool InitProgram(Graph **graph) {
 	strcpy(settings.Webpic2_File_Name, "http://localhost:22334/");
 	settings.Web_Mode = 0;	//默认打开方式为本地打开
 	strcpy(settings.Dot_File_Name, "navigation.dot");
-	strcpy(settings.Js_File_Name, "./graphviz_lite1");
 	//1.初始化图
 	(*graph) = malloc(sizeof(Graph));
 	(*graph)->basisFile = fopen(settings.Basis_File_Name, "r");
@@ -343,17 +339,19 @@ bool InitProgram(Graph **graph) {
 		(*graph)->adjGraph->list[i].first = NULL;
 	}
 	memset((*graph)->adjGraph->ports, 0, sizeof((*graph)->adjGraph->ports));
-
-	//4.初始化空闲队列
+	//4.初始化空闲队列和basis数组
 	emptySpot = InitQueue(&emptySpot);
 	for (int i = 0; i < MaxNum; ++i) {
 		EnQueue(emptySpot,i);
+		basisSn[i] = -1;
 	}
-
 	//5.填充邻接表
 	ReadGraphFile(*graph);
 	//6.创造图
 	CreateAdjGraph((*graph)->adjGraph, (*graph)->adjMatrix, (*graph)->nodeNum, (*graph)->edgeNum);
+	printf("程序初始化完成!");
+	Sleep(2000);
+	system("cls");
 	return true;
 }
 bool ToPicFile(Graph *g) {
@@ -376,7 +374,7 @@ bool ToPicFile(Graph *g) {
 		return false;
 	}
 	//文件头
-	fprintf(navFile, "g G{"
+	fprintf(navFile, "graph G{"
 					 "layout=fdp;"
 					 "node[shape=rect, fontname=KaiTi];"
 					 "splines=curved;");
@@ -445,13 +443,16 @@ bool ReadGraphFile(Graph *g) {
 			InitEdge(g->adjMatrix, g->adjGraph, tempStr, &g->edgeNum);
 		}else{
 			//有可能有问题
+			printf("错误：语句“%s”无法识别！\n",tempStr);
 		}
 	}
 	fclose(reader);
 	return true;
 }
 bool InitNode(Graph *graph, char *str) {
-	//1.定义变量，sn号，建筑名，坐标位置，可选坐标指定
+	char backup[50];
+	strcpy(backup, str);
+	//1.定义变量，sn号，建筑名，坐标位置，坐标可选择性指定
 	int sn;
 	char *name = NULL;
 	char *xy = NULL;
@@ -466,6 +467,14 @@ bool InitNode(Graph *graph, char *str) {
 		x = parseDouble(strtok(xy,","));
 		y = parseDouble(strtok(NULL,","));
 	}
+	if(name == NULL || strlen(name) == 0){
+		printf("错误：建筑名不得为空，有误的数据为：“%s”，程序将将无视该结点定义！\n", backup);
+		return false;
+	}
+	if(sn < 0){
+		printf("错误：结点定义有误，有误的数据为：“%s”，将无视该结点定义！\n", backup);
+		return false;
+	}
 	//3.转换编码（外存UTF8->内存GBK）
 	name = Utf8ToGbk(name);
 
@@ -476,21 +485,29 @@ bool InitNode(Graph *graph, char *str) {
 
 	return true;
 }
+//修改：与basis文件对应
 bool InitEdge(int adjMatrix[][MaxNum], AdjGraph *adjGraph, char *str, int *edgeNum) {
-	(*edgeNum)++;
+	char backup[50];
+	strcpy(backup, str);
 	//1.定义变量并初始化
 	int sn1, sn2, weight;
+	char *port1 = NULL, *port2 = NULL;
 	char *tempPorts = NULL;
 	//2.分割字符串：双sn，权值，ports
-	sn1 = parseInt(strtok(str, "-"));
-	sn2 = parseInt(strtok(NULL, "-"));
+	sn1 = getSnInBasis(parseInt(strtok(str, "-")));
+	sn2 = getSnInBasis(parseInt(strtok(NULL, "-")));
 	weight = parseInt(strtok(NULL, "-"));
 	tempPorts = strtok(NULL, "-");
-	//3.二次加工：双sn和权值校验，ports检验
-	if(sn1 == -1 || sn2 == -1 || weight == -1){
-		//报错
+	//3.双sn和权值校验，ports检验
+	if(sn1 < 0 || sn2 < 0 || weight < 0){
+		printf("警告：找不到结点或语法有误，有误的数据行：“%s”，程序将忽略该路径(491)\n",backup);
+		return false;
+	}else if(tempPorts != NULL){
+		if(strchr(tempPorts,'n') == NULL && strchr(tempPorts,'s') == NULL && strchr(tempPorts,'w') == NULL && strchr(tempPorts,'e') == NULL){
+			printf("警告：方向定义有误，有误的数据行：“%s”，程序将忽略该方向定义(495)\n",backup);
+			tempPorts = NULL;
+		}
 	}
-
 	int portSize = 0;
 	if(tempPorts != NULL){
 		portSize = (int)strlen(tempPorts);
@@ -500,16 +517,33 @@ bool InitEdge(int adjMatrix[][MaxNum], AdjGraph *adjGraph, char *str, int *edgeN
 	adjMatrix[sn2][sn1] = weight;
 	switch (portSize) {
 		case 3:
-			adjGraph->ports[sn2][sn1] = tempPorts[2];
+			if(toLowerDir(tempPorts[2]) == 0){
+				printf("警告：方向定义有误，有误的数据行：“%s”，程序将忽略该方向定义(495)\n",backup);
+			}else{
+				adjGraph->ports[sn2][sn1] = tempPorts[2];
+			}
 		case 1:
-			adjGraph->ports[sn1][sn2] = tempPorts[0];
+			if(toLowerDir(tempPorts[0]) == 0){
+				printf("警告：方向定义有误，有误的数据行：“%s”，程序将忽略该方向定义(495)\n",backup);
+			}else{
+				adjGraph->ports[sn1][sn2] = tempPorts[0];
+			}
 			break;
 		case 2:
-			adjGraph->ports[sn2][sn1] = tempPorts[1];
+			if(toLowerDir(tempPorts[1]) == 0){
+				printf("警告：方向定义有误，有误的数据行：“%s”，程序将忽略该方向定义(495)\n",backup);
+			}else{
+				adjGraph->ports[sn2][sn1] = tempPorts[1];
+			}
+			break;
+		case 0:
 			break;
 		default:
+			printf("警告：方向定义有误，有误的数据行：“%s”，程序将忽略该方向定义(495)\n",backup);
 			break;
 	}
+	//更新边数
+	(*edgeNum)++;
 	return true;
 }
 bool AddBuilding(Graph *g, char *name, bool isLocated, ...){
@@ -536,11 +570,6 @@ bool AddBuilding(Graph *g, char *name, bool isLocated, ...){
 		y = va_arg(vaList,double);
 		va_end(vaList);
 		//参数校验
-		if(x < 0 || y < 0){
-			printf("\n错误：坐标输入格式有误，添加失败！(539)\n");
-			Sleep(1000);
-			return false;
-		}
 		if(x > 14 || y > 15){
 			printf("\n错误：坐标超过校园范围，添加失败！(544)\n");
 			Sleep(1000);
@@ -552,12 +581,25 @@ bool AddBuilding(Graph *g, char *name, bool isLocated, ...){
 	//2.填充结点名字信息/位置信息
 	strcpy(g->nodes[newNodeSn].data, name);
 	g->nodes[newNodeSn].isValid = true;
-	g->nodes[newNodeSn].pos_x = x;
-	g->nodes[newNodeSn].pos_y = y;
+	if(x >= 0 && y >= 0) {
+		g->nodes[newNodeSn].pos_x = x;
+		g->nodes[newNodeSn].pos_y = y;
+	}
 	//3.更新结点数
 	g->nodeNum++;
 
 	return true;
+}
+int getSnInBasis(int basisNum){
+	if(basisNum == -1){
+		return -1;
+	}
+	for (int i = 0; i < MaxNum; ++i) {
+		if(basisSn[i] == basisNum){
+			return i;
+		}
+	}
+	return -1;
 }
 int getSn(Graph *g, char *name){
 	//找，没找到返回Sn
@@ -570,7 +612,7 @@ int getSn(Graph *g, char *name){
 	}
 	return ret;
 }
-bool DelBuilding(Graph *g, char *name, bool isDelRoad){
+bool DelBuilding(Graph *g, char *name, bool setDelRoad){
 	//删除建筑：1.清除邻接表中的所有信息；2.邻接图所有结点断联；3.清除结点表中的信息；4.sn入队
 	int concernSn[MaxNum];
 	int concern = 0;
@@ -600,8 +642,8 @@ bool DelBuilding(Graph *g, char *name, bool isDelRoad){
 	}
 	//2.2邻接矩阵和port矩阵清除关联信息。若保留路径，互相复制粘贴路径后再清除，并选择性补路
 	for (int i = 0; i < concern; ++i) {
-		if(!isDelRoad){//不删路，重新计算路线后再删除
-			for (int j = 0; j < concern; ++j) {//遍历concern数组
+		if(!setDelRoad){//不删路，重新计算路线后再删除
+			for (int j = i+1; j < concern; ++j) {//遍历concern数组
 				//对于不相邻的两点加新边，调整port补路，相邻者不管
 				if(!isConnected(g, g->nodes[concernSn[i]].data, g->nodes[concernSn[j]].data)){
 					//对于权：两条路径的权值相加
@@ -758,8 +800,8 @@ bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
 			strcpy(g->nodes[nodeSn].data, newName);
 		}
 		if(isRelocated){
-			g->nodes[nodeSn].pos_x = va_arg(vaList,double);
-			g->nodes[nodeSn].pos_y = va_arg(vaList,double);
+			g->nodes[nodeSn].pos_x = x;
+			g->nodes[nodeSn].pos_y = y;
 		}
 		va_end(vaList);
 
@@ -769,7 +811,7 @@ bool UpdateBuilding(Graph *g, char *name, bool isRename, bool isRelocated, ...){
 	printf("\n未发生修改\n");
 	return false;
 }
-bool AddRoad(Graph *g, char *origin, char *end, int length, bool isSetPorts, ...){
+bool AddRoad(Graph *g, char *origin, char *end, int length, bool setPorts, ...){
 	//加路：1.找两个点的下标；2.邻接矩阵双向加值；2.1有路者不可操作；3.链表加两个结点；
 	int sn1 = getSn(g,origin);
 	int sn2 = getSn(g,end);
@@ -782,7 +824,7 @@ bool AddRoad(Graph *g, char *origin, char *end, int length, bool isSetPorts, ...
 	g->adjMatrix[sn1][sn2] = length;
 	g->adjMatrix[sn2][sn1] = length;
 	//如果指定了方向
-	if(isSetPorts){
+	if(setPorts){
 		//获取形参列表
 		va_list vaList;
 		//参数初始化
@@ -791,7 +833,7 @@ bool AddRoad(Graph *g, char *origin, char *end, int length, bool isSetPorts, ...
 		char ch1, ch2;
 		ch1 = (char)va_arg(vaList,int);
 		ch2 = (char)va_arg(vaList,int);
-		if(ch1 != 0)	//对于0，不管
+		if(ch1 != 0)	//对于port=0，不管
 			g->adjGraph->ports[sn1][sn2] = ch1;
 		if(ch2 != 0)
 			g->adjGraph->ports[sn2][sn1] = ch2;
@@ -822,7 +864,7 @@ bool DelRoad(Graph *g, char *origin, char *end){
 	DelAdjNodeInList(&g->adjGraph->list[sn2],sn1);
 	return true;
 }
-bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool isSetPorts, ...){
+bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool setPorts, ...){
 	//更新路：1.找两个点的下标；2.1改权：邻接矩阵双向改值；若改道：删两个路，加两个路
 	int sn1 = getSn(g, origin);
 	int sn2 = getSn(g, end);
@@ -838,7 +880,7 @@ bool UpdateRoad(Graph *g, char *origin, char *end, int newLength, bool isSetPort
 	UpdateAdjNodeInList(&g->adjGraph->list[sn1],sn2,newLength);
 	UpdateAdjNodeInList(&g->adjGraph->list[sn2],sn1,newLength);
 	//4.标记开口
-	if(isSetPorts){
+	if(setPorts){
 		//获取形参列表
 		va_list vaList;
 		//参数初始化
@@ -865,12 +907,6 @@ bool isReachable(Graph *g, char *origin, char *dest){
 
 	return isFind;
 }
-int FShortestPaths(Graph *g, int origin, int dest, int path[], int pathWeight[]){
-	int totalWeight = 0;
-	int pathSize;
-	pathSize = Dijkstra(g->adjMatrix, origin, dest, g->nodeNum, path, pathWeight, &totalWeight);
-	return pathSize;
-}
 bool Navigate(Graph *g){
 	//0.清屏，输出文件头
 	system("cls");
@@ -878,8 +914,8 @@ bool Navigate(Graph *g){
 	printf("导航路线规划..（输入“n”返回上一级菜单）\n");
 	PrintPageHead();
 	//1.读取用户信息
-	char *origin;
-	char *dest;
+	char origin[20];
+	char dest[20];
 	//1.1读取信息
 	again:
 	printf("请输入起始地：");
@@ -894,7 +930,7 @@ bool Navigate(Graph *g){
 	if(origin[0] == 'n' || origin[0] == 'N'){
 		return true;
 	}
-	if(origin == NULL || dest == NULL){
+	if(strlen(origin) == 0 || strlen(dest) == 0){
 		printf("\n错误：数据输入失效！(896)\n");
 		Sleep(1000);
 		return false;
@@ -915,8 +951,8 @@ bool Navigate(Graph *g){
 	}
 	//2.拿到最小路径（包括起点和终点）
 	int path[MaxNum];
-	int weight[MaxNum];
-	int length = FShortestPaths(g, sn1, sn2, path, weight);
+	int weights[MaxNum];
+	int length = Dijkstra(g->adjMatrix, sn1, sn2, path, weights);
 //	//3.拿到全部路径
 //	int paths[MaxNum+1][MaxNum+1];
 //	FindAllPaths(g->adjGraph, sn1, sn2, paths);
@@ -925,8 +961,8 @@ bool Navigate(Graph *g){
 	for (int i = 0; i < length; i++) {
 		printf("%s", g->nodes[path[i]].data);
 		if(i != length-1){
-			printf("<-%d->",weight[i+1]);
-			totalWeight += weight[i+1];
+			printf("<-%d->", weights[i + 1]);
+			totalWeight += weights[i + 1];
 		}
 	}
 	printf("\n全程距离: %d\n", totalWeight);
@@ -1016,7 +1052,7 @@ bool SelectBuilding(Graph *g){
 			Sleep(1500);
 			break;
 		case '2':
-			UpdateRoadInfo(g, origin);
+			ModifyRoadInfo(g, origin);
 			ToPicFile(g);
 			printf("操作完成，正在返回上一级页面..");
 			Sleep(1500);
@@ -1047,7 +1083,7 @@ bool SelectBuilding(Graph *g){
 	}
 	return true;
 }
-bool UpdateRoadInfo(Graph *g, char *origin){
+bool ModifyRoadInfo(Graph *g, char *name){
 	//1.相关数据定义及初始化
 	char input[30];
 	int portsSize = 0;
@@ -1057,7 +1093,7 @@ bool UpdateRoadInfo(Graph *g, char *origin){
 	printf("\n请输入新道路信息："
 		   "（请选中目的建筑；路径长度仅能为正整数；符号均为英文符号；开口方向n/s/w/e均为小写字母）\n"
 		   "格式：【建筑名（不可含数字符号字符）-新长度-道路起点开口方向,道路终点开口方向】，缺省的元素无需输入冗余的符号\n"
-		   "%s<->", origin);
+		   "%s<->", name);
 	scanf_s("%s", input);
 	getchar();
 	//2.分析用户输入
@@ -1104,14 +1140,19 @@ bool UpdateRoadInfo(Graph *g, char *origin){
 		return false;
 	}
 	//3.判断分流
-	if(isConnected(g, origin, str1)){
+	if(isConnected(g, name, str1)){
 		if(length > 0){	//情况1：边存在，修改权值
-			UpdateRoad(g, origin, str1, length, portsSize, port1, port2);
+			UpdateRoad(g, name, str1, length, portsSize, port1, port2);
 		}else{	//情况2：边存在，删除边
-			DelRoad(g, origin, str1);
+			DelRoad(g, name, str1);
 		}
 	}else{	//情况3：边不存在，增加边
-		AddRoad(g, origin, str1, length, portsSize, port1, port2);
+		if(length <= 0){
+			printf("\n警告：无效的操作，无道路的情况下删除道路是无意义的！(1114)\n");
+			Sleep(1000);
+			return false;
+		}
+		AddRoad(g, name, str1, length, portsSize, port1, port2);
 	}
 	return true;
 }
@@ -1148,7 +1189,7 @@ bool UpdateBuildingInfo(Graph *g, char *origin){
 	}else if(str2 == NULL){		//情况2：给定建筑名，不指定坐标
 		newName = str1;
 		rename = true;
-	}else if(str2 != NULL && strchr(str1,',') != NULL ){		//情况3：给定建筑名，给定坐标
+	}else if(str2 != NULL && strchr(str2,',') != NULL ){		//情况3：给定建筑名，给定坐标
 		newName = str1;
 		rename = true;
 		x = parseDouble(strtok(str2,","));
@@ -1286,6 +1327,7 @@ bool DestroyProgram(){
 		remove(settings.Dot_File_Name);
 		remove("./graphviz_lite1/navigation.js");
 		remove("./graphviz_lite2/src/navigation.js");
+		remove("nav.bat");
 		Sleep(1000);
 	}
 	if(isNodeAlive){

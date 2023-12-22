@@ -1,8 +1,3 @@
-#include "queue.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-
 #ifndef CAMPUSNAVIGATION_ADJGRAPH_H
 #define CAMPUSNAVIGATION_ADJGRAPH_H
 #define MaxIntro 50
@@ -34,17 +29,17 @@ typedef struct graph {
 //图整合
 typedef struct {
 	AdjGraph *adjGraph;
-	int adjMatrix[MaxNum][MaxNum];
+	int adjMatrix[MaxNum][MaxNum];	//邻接矩阵
 	Node nodes[MaxNum];
 	FILE *basisFile;
 	int nodeNum;    //物理个数
 	int edgeNum;    //物理个数
 } Graph;
 
-extern bool CreateAdjGraph(AdjGraph *g, int adj[MaxNum][MaxNum], int nodeNum, int edgeNum);
-extern void getReachableByDFS(AdjGraph *adjGraph, int origin, int aim, int nowLength, int visited[], bool *isFind);
-extern int Dijkstra(int adjMatrix[][MaxNum], int origin, int dest, int nodeNums, int ret[], int retWeight[], int *totalWeights);
-extern void FindPathsByDFS(AdjGraph *adjGraph, int origin, int destination, int nowLength, int path[], int visited[], int paths[][MaxNum+1]);
-extern void FindAllPaths(AdjGraph *g, int origin, int aim, int paths[][MaxNum+1]);
+bool CreateAdjGraph(AdjGraph *g, int adj[MaxNum][MaxNum], int nodeNum, int edgeNum);
+void getReachableByDFS(AdjGraph *adjGraph, int origin, int aim, int nowLength, int visited[], bool *isFind);
+int Dijkstra(int adjMatrix[][MaxNum], int origin, int dest, int ret[], int retWeight[]);
+void FindPathsByDFS(AdjGraph *adjGraph, int origin, int destination, int nowLength, int path[], int visited[], int paths[][MaxNum+1]);
+void FindAllPaths(AdjGraph *g, int origin, int aim, int paths[][MaxNum+1]);
 
 #endif //CAMPUSNAVIGATION_ADJGRAPH_H

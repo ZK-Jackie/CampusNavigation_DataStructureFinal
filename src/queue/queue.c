@@ -2,7 +2,18 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "queue.h"
+#define QueueVol 25
+//队列相关类型（用于BFS）
+typedef struct queue {
+	int sn;            	//结点数据
+	struct queue *next; //下一个
+	int spot;           //元素位置
+} DataNode;
+typedef struct {            //封装队列参数
+	DataNode *front;
+	DataNode *rear;
+} Link;
+
 
 bool EnQueue(Link *link, int data) {
 	bool isQueueable = ((link->rear->spot + 1) % (QueueVol + 1)) != (link->front->spot);
