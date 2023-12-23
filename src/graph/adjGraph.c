@@ -34,7 +34,6 @@ typedef struct {
 	int nodeNum;    //物理个数
 	int edgeNum;    //物理个数
 } Graph;
-void FindPathsByDFS(AdjGraph *adjGraph, int origin, int destination, int nowLength, int path[], int visited[], int paths[][MaxNum+1]);
 
 bool CreateAdjGraph(AdjGraph *g, int adj[MaxNum][MaxNum], int nodeNum, int edgeNum) {
 	//创建邻接表储存方式
@@ -54,73 +53,6 @@ bool CreateAdjGraph(AdjGraph *g, int adj[MaxNum][MaxNum], int nodeNum, int edgeN
 	return true;
 }
 
-
-/**
- * @param adjGraph 邻接表式存储的图
- * @param origin 起始结点
- * @param aim 目标结点
- * @param nowLength 当前路径长度
- * @param path 临时路径储存地
- * @param assign 寻找定长路径，0--寻找所有路径，>0--寻找定长路径（不带权）
- * @param visited 标记已访问的结点
- * @param isFind 向前一函数是否找到符合条件的路径
- * @remark 一个普通的DFS，递归实现（有点像树的遍历）
- * */
-void getReachableByDFS(AdjGraph *adjGraph, int origin, int aim, int nowLength, int visited[], bool *isFind) {
-	//记录当前位置已被访问过
-	visited[origin] = 1;
-	if((*isFind)){		//【递归出口2】
-		return;
-	}
-	if (origin == aim) {    //【递归出口1】
-		//通知前一个函数已找到符合条件的路径
-		(*isFind) = true;
-		putchar('\n');
-		return;
-	}
-	//DFS
-	ArcNode *p = adjGraph->list[origin].first;    //遍历邻接表
-	while (p != NULL) {
-		int newStart = p->sn;
-		if (visited[newStart] != 1) {	//没被访问过
-			//一条路走到黑
-			getReachableByDFS(adjGraph, newStart, aim, nowLength, visited, isFind);
-		}
-		//上一条路走完换第二条
-		p = p->next;
-	}
-}
-
-void FindAllPaths(AdjGraph *g, int origin, int aim, int paths[][MaxNum+1]){
-	//定义、初始化path和visited数组
-	int path[MaxNum];
-	int visited[MaxNum];
-	for (int i = 0; i < MaxNum; ++i) {
-		path[i] = 0;
-		visited[i] = 0;
-	}
-	//初始化paths数组
-	for (int i = 0; i < MaxNum+1; ++i) {
-		for (int j = 0; j < MaxNum+1; ++j) {
-			paths[i][j] = 0;
-		}
-	}
-	//DFS找路
-	FindPathsByDFS(g, origin, aim, 0, path, visited, paths);
-}
-
-/**
- * @param adjGraph 空的邻接表式存储的图
- * @param origin 起始结点
- * @param destination 目标结点
- * @param nowLength 当前路径长度
- * @param path 临时路径储存地
- * @param assign 寻找定长路径，0--寻找所有路径，>0--寻找定长路径（不带权）
- * @param visited 标记已访问的结点
- * @param isFind 向前一函数是否找到符合条件的路径
- * @param paths (0,0)全部路径数目，(0,n)代表第n个路径中含的结点个数
- * @remark 一个普通的DFS，递归实现（有点像树）
- * */
 void FindPathsByDFS(AdjGraph *adjGraph, int origin, int destination, int nowLength, int path[], int visited[], int paths[][MaxNum+1]){
 	//更新路径
 	path[nowLength] = origin;
@@ -155,9 +87,49 @@ void FindPathsByDFS(AdjGraph *adjGraph, int origin, int destination, int nowLeng
 	//重置遍历结果
 	visited[origin] = 0;
 }
+void getReachableByDFS(AdjGraph *adjGraph, int origin, int aim, int nowLength, int visited[], bool *isFind) {
+	//记录当前位置已被访问过
+	visited[origin] = 1;
+	if((*isFind)){		//【递归出口2】
+		return;
+	}
+	if (origin == aim) {    //【递归出口1】
+		//通知前一个函数已找到符合条件的路径
+		(*isFind) = true;
+		putchar('\n');
+		return;
+	}
+	//DFS
+	ArcNode *p = adjGraph->list[origin].first;    //遍历邻接表
+	while (p != NULL) {
+		int newStart = p->sn;
+		if (visited[newStart] != 1) {	//没被访问过
+			//一条路走到黑
+			getReachableByDFS(adjGraph, newStart, aim, nowLength, visited, isFind);
+		}
+		//上一条路走完换第二条
+		p = p->next;
+	}
+}
+void FindAllPaths(AdjGraph *g, int origin, int aim, int paths[][MaxNum+1]){
+	//定义、初始化path和visited数组
+	int path[MaxNum];
+	int visited[MaxNum];
+	for (int i = 0; i < MaxNum; ++i) {
+		path[i] = 0;
+		visited[i] = 0;
+	}
+	//初始化paths数组
+	for (int i = 0; i < MaxNum+1; ++i) {
+		for (int j = 0; j < MaxNum+1; ++j) {
+			paths[i][j] = 0;
+		}
+	}
+	//DFS找路
+	FindPathsByDFS(g, origin, aim, 0, path, visited, paths);
+}
 
-//物理size
-bool reverseArr(int *arr, int size){
+bool reverseArr(int *arr, int size){//物理size
 	int temp;
 	for (int i = 0; i < size/2; ++i) {
 		temp = arr[i];
@@ -167,12 +139,12 @@ bool reverseArr(int *arr, int size){
 
 	return true;
 }
+
 int Dijkstra(int adjMatrix[][MaxNum], int origin, int dest, int ret[], int retWeight[]){
 	int nodeNums = MaxNum;	//有可能存在废弃点和新加点交叠的状态，此时nodeNums与
 	int set[nodeNums];
 	int distance[nodeNums];
 	int path[nodeNums];
-
 	//1.初始化
 	for (int i = 0; i < nodeNums; ++i) {
 		//初始化集合
@@ -188,7 +160,6 @@ int Dijkstra(int adjMatrix[][MaxNum], int origin, int dest, int ret[], int retWe
 	}
 	//起始结点入集合
 	set[origin] = 1;
-
 	int minDistance;
 	int minPoint;
 	//5.每次set进一个，则总共需要循环nodeNums - 1次
@@ -215,7 +186,6 @@ int Dijkstra(int adjMatrix[][MaxNum], int origin, int dest, int ret[], int retWe
 			}
 		}
 	}
-
 	//1.填充路径数组
 	//函数返回值是一个有效数据的下标  也就是起点  从该下标向前遍历即为最短路径
 	int retSize = 0;
@@ -236,8 +206,67 @@ int Dijkstra(int adjMatrix[][MaxNum], int origin, int dest, int ret[], int retWe
 		retWeight[i] = distance[ret[i]] - pre;
 		pre = distance[ret[i]];
 	}
-	//3.填充总权值
-//	(*totalWeights) = distance[dest];
-
 	return retSize;
+}
+
+bool DelAdjNodeInList(HeadNode *head, int aim){
+	//单向删除结点
+	ArcNode *pre = head->first;
+	ArcNode *p = NULL;
+	if(pre != NULL){	//异常情况一，链表为空
+		p = pre->next;
+	} else{
+		return false;
+	}
+	if(pre->sn == aim){	//非凡情况二，第一个就是目标
+		head->first = p;
+		free(pre);
+		pre = NULL;
+		return true;
+	}
+	//一般情况，找
+	while(p != NULL){
+		if(p->sn == aim){
+			pre->next = p->next;
+			free(p);
+			p = NULL;
+			return true;
+		}
+		pre = p;
+		p = p->next;
+	}
+	return false;
+}
+bool UpdateAdjNodeInList(HeadNode *head, int aim, int weight){
+	ArcNode *pre = head->first;
+	//一般情况，找
+	while(pre != NULL){
+		if(pre->sn == aim){
+			pre->weight = weight;
+			return true;
+		}
+		pre = pre->next;
+	}
+	return false;
+}
+bool AddAdjNode(AdjGraph *adj, int srcSn, int resSn, int weight){
+	//双向添加结点
+	//创建/初始化结点
+	ArcNode *src = (ArcNode *)malloc(sizeof (ArcNode));
+	src->sn = srcSn;
+	src->weight = weight;
+	src->next = NULL;
+	ArcNode *res = (ArcNode *)malloc(sizeof (ArcNode));
+	res->sn = resSn;
+	res->weight = weight;
+	res->next = NULL;
+
+	//头插 src --> res  ；  res --> src
+	res->next = adj->list[srcSn].first;
+	adj->list[srcSn].first = res;
+
+	src->next = adj->list[resSn].first;
+	adj->list[resSn].first = src;
+
+	return true;
 }

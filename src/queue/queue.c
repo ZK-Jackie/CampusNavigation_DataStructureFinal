@@ -9,11 +9,10 @@ typedef struct queue {
 	struct queue *next; //下一个
 	int spot;           //元素位置
 } DataNode;
-typedef struct {            //封装队列参数
+typedef struct {
 	DataNode *front;
 	DataNode *rear;
-} Link;
-
+} Link;//封装队列参数
 
 bool EnQueue(Link *link, int data) {
 	bool isQueueable = ((link->rear->spot + 1) % (QueueVol + 1)) != (link->front->spot);
@@ -25,15 +24,12 @@ bool EnQueue(Link *link, int data) {
 		return false;
 	}
 }
-
 bool isQueueable(Link *link){
 	return ((link->rear->spot + 1) % (QueueVol + 1)) != (link->front->spot);
 }
-
 bool isEmpty(Link *link) {
 	return link->rear == link->front;
 }
-
 DataNode *DeQueue(Link *link) {
 	if (isEmpty(link)) {
 		return NULL;

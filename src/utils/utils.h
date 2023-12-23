@@ -8,5 +8,5 @@ void setCursorVisible(bool isVisible);
 int parseInt(char *str);
 double parseDouble(char *str);
 char toLowerDir(char ch);
-
+bool PrintPageHead();
 #endif //CAMPUSNAVIGATION_UTILS_H

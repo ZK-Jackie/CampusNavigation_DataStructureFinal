@@ -41,5 +41,7 @@ void getReachableByDFS(AdjGraph *adjGraph, int origin, int aim, int nowLength, i
 int Dijkstra(int adjMatrix[][MaxNum], int origin, int dest, int ret[], int retWeight[]);
 void FindPathsByDFS(AdjGraph *adjGraph, int origin, int destination, int nowLength, int path[], int visited[], int paths[][MaxNum+1]);
 void FindAllPaths(AdjGraph *g, int origin, int aim, int paths[][MaxNum+1]);
-
+bool DelAdjNodeInList(HeadNode *head, int aim);
+bool UpdateAdjNodeInList(HeadNode *head, int aim, int weight);
+bool AddAdjNode(AdjGraph *adj, int srcSn, int resSn, int weight);
 #endif //CAMPUSNAVIGATION_ADJGRAPH_H
